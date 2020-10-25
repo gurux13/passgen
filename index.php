@@ -19,7 +19,7 @@ ensure_login();
 	</tr>
 	<tr >
 	<td>Результат:</td>
-	<td class="resulting"><a href="#" onclick="copyResultToClipboard" id='result'></a></td>
+	<td class="resulting"><a href="#" onclick="copyResultToClipboard(); return false;" id='result'></a></td>
 	</tr>
 
 </table>
