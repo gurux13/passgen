@@ -169,6 +169,18 @@ ensure_login();
 		Обратная совместимость<br/>сохранена
 		</td>
 </tr>
+<tr>
+	<td>0.4.0</td>
+	<td>25.10.2020</td>
+	<td><ul>
+		<li>Поправлена безопасность</li>
+		<li>Переезд на ddns.net</li>
+		<li>Переезд на github</li>
+		<li>Включен HTTPS</li>
+		</ul>
+		Обратная совместимость<br/>сохранена
+		</td>
+</tr>
 </tbody>
 </table>
 <b>[Passwords generator]</b><br/>by gurux13 &copy; 2019
