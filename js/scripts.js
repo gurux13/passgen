@@ -10,6 +10,7 @@ function copyToClipboard(text) {
 
 function copyResultToClipboard() {
 	copyToClipboard(document.getElementById('result').innerText);
+	return false;
 }
 
 function resetresource()
