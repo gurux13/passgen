@@ -2,6 +2,10 @@ body {
     font-family: arial, sans-serif;
 }
 
+#result,#master-sha{
+    font-family: monospace;
+    font-size: 1.3em;
+}
 
 /* The snackbar - position it at the bottom and in the middle of the screen */
 #snackbar {
