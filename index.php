@@ -9,6 +9,7 @@ if (isset($_REQUEST["logout"])) {
 ensure_login();
 ?>
 <body>
+<div id="snackbar"></div>
 <div id="cover" class="cover">&nbsp;</div>
 <div class="res" style="display:none; overflow:hidden">
 <h2>Результат</h2>

@@ -10,7 +10,30 @@ function copyToClipboard(text) {
 
 function copyResultToClipboard() {
 	copyToClipboard(document.getElementById('result').innerText);
+	snackbar("Скопировано в буфер обмена");
 	return false;
+}
+
+function snackbar(text) {
+    // Get the snackbar DIV
+    let x = document.getElementById("snackbar");
+    x.className = x.className.replace("show", "");
+    const key = Math.random();
+    x.snack_id = key;
+
+    setTimeout(function () {
+        x.innerText = text;
+        // Add the "show" class to DIV
+        x.className = "show";
+    }, 10);
+
+
+    // After 3 seconds, remove the show class from DIV
+    setTimeout(function () {
+        if (x.snack_id == key) {
+            x.className = x.className.replace("show", "");
+        }
+    }, 3000);
 }
 
 function resetresource()

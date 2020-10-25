@@ -20,9 +20,11 @@ header("Content-Type: text/html; charset=utf-8");
 <script src="js/jquery.js" type="text/javascript"></script>
 <script src="js/sha.js" type="text/javascript"></script>
 <script src="js/scripts.js?seed=1" type="text/javascript"></script>
+<style type="text/css" href="" src="css/styles.css"></style>
 <meta charset="utf-8">
 <meta name="Content-type" content="text/html; charset=utf8">
-<style type="text/css">
+<link rel="stylesheet" type="text/css" href="css/styles.css">
+
 <!--
 a.res-control a.res {
 	text-decoration: none;
