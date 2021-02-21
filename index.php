@@ -20,8 +20,12 @@ ensure_login();
 	</tr>
 	<tr >
 	<td>Результат:</td>
-	<td class="resulting"><a href="#" onclick="copyResultToClipboard(); return false;" id='result'></a></td>
+	<td class="resulting"><a class="repeatable" href="#" onclick="copyResultToClipboard(); return false;" id='result'></a></td>
 	</tr>
+	<tr >
+	<td>Очистка:</td>
+	<td><a href="#" class="repeatable" id="time-remaining" onclick="postponeCleanup(); return false"></a> <a href="#" class="repeatable" id="clean-now" onclick="cleanup(); return false;">Сейчас</a></td>
+	</tr>	
 
 </table>
 </div>
@@ -181,9 +185,19 @@ ensure_login();
 		Обратная совместимость<br/>сохранена
 		</td>
 </tr>
+<tr>
+	<td>0.4.1</td>
+	<td>21.02.2021</td>
+	<td><ul>
+		<li>Поправлен вход</li>
+		<li>Включена очистка</li>
+		</ul>
+		Обратная совместимость<br/>сохранена
+	</td>
+</tr>
 </tbody>
 </table>
-<b>[Passwords generator]</b><br/>by gurux13 &copy; 2019
+<b>[Passwords generator]</b><br/>by gurux13 &copy; 2012-2021
 </center>
 
 

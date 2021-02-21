@@ -21,6 +21,10 @@ if (isset($_REQUEST['login'])){
 			mysqli_query($link, "insert into logins set login='$user_safe', passhash='$passhash_safe', signature='$signature'");
 			$_SESSION['signature'] = $signature;
 			$_SESSION['login'] = $user_safe;
+			header("Location: index.php");
+			
+			echo "Успешно!<br>";
+			die("<a href='index.php'> Click me!</a>");
 		} 
 		else
 		{

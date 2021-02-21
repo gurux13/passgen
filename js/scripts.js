@@ -69,6 +69,7 @@ function resetall()
 {
 	$("div.res").slideUp(300);
 	$("button.reset").click();
+	stopCleanup();
 }
 function nextChar(c)
 {
@@ -240,8 +241,44 @@ function generate(resource, length, revision, master, letters, digits, symbols, 
 			return pass_final.ToString ();
 */
 }
+let remaining = 0;
+function stopCleanup() {
+	window.clearInterval(resetTimeout);
+	resetTimeout = null;
+}
+function cleanup() {
+	resetall();
+	update();
+
+}
+function cleanupTick() {
+	--remaining;
+	if (remaining <= 0) {
+		cleanup();
+	} else {
+		$("#time-remaining").html(remaining + "s");
+		
+	}
+}
+function enqueueCleanup() {
+	if (resetTimeout) {
+		window.clearTimeout(resetTimeout);
+	}
+	remaining = 61;
+	cleanupTick();
+	resetTimeout = window.setInterval(cleanupTick, 1000);
+}
+function postponeCleanup() {
+	if (resetTimeout) {
+		window.clearInterval(resetTimeout);
+		enqueueCleanup();
+	}
+}
+
+
 function generate_click()
 {
+	enqueueCleanup();
 	resource = $("#resource-input").val();
 	length = $("#length-input").val();
 	revision = $("#revision-input").val();
@@ -339,6 +376,7 @@ function setfields(variant, change_resource)
 	$("#underscore-input").prop("checked", variant.underscore ? "checked":"");
 
 }
+let resetTimeout = null;
 
 $(document).ready(function(){
 	resetall();
@@ -362,9 +400,17 @@ $(document).ready(function(){
 		closeResList();
 	});
 	$(".gen-input").keypress(function (event){
+		postponeCleanup();
 		if (event.charCode == 13) {
 			generate_click();
 		}
+	});
+	$(".gen-input").change(function() {
+		postponeCleanup();
+
+	});
+	$(".reset").click(function() {
+		postponeCleanup();
 	});
 	
 });
