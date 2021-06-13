@@ -4,7 +4,7 @@ require_once 'util.php';
 
 if (isset($_REQUEST["logout"])) {
 	unset($_SESSION['signature']);
-	setcookie('signature', null);
+	setcookie('signature', null, time()+60*60*24*30, null, null, null, true);
 }
 ensure_login();
 ?>

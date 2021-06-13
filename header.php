@@ -8,7 +8,7 @@ if (isset($_REQUEST['remote'])) {
 }
 session_start();
 if (isset($_SESSION['signature'])) {
-	setcookie("signature", $_SESSION['signature']);
+	setcookie('signature', $_SESSION['signature'], time()+60*60*24*30, null, null, null, true);
 }
 if (isset($_COOKIE['signature'])) {
 	$_SESSION['signature'] = $_COOKIE['signature'];
