@@ -1,5 +1,10 @@
 <?php
 require_once 'header.php';
+require_once 'util.php';
+if (is_logged_in()) {
+    header('Location: index.php');
+    die("Already logged in. Go to <a href='index.php'>main page</a>");
+}
 $nologin = false;
 if (isset($_REQUEST['login'])){
 	$user = $_REQUEST['login'];
