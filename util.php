@@ -5,12 +5,35 @@ function gtfo() {
 	die('<a href="login.php">Please login</a>');
 }
 
+function parse_cookie_signature() {
+    global $link;
+    if (isset($_COOKIE['signature'])) {
+        $signature = $_COOKIE['signature'];
+        if (!$signature) {
+            return;
+        }
+        if ($signature !== mysqli_real_escape_string($link, $signature)) {
+            return false;
+        }
+        $result = mysqli_query($link, "select login as l from logins where signature = '$signature'") or die(mysql_error());
+        if ($result->num_rows !== 1) {
+            return;
+        }
+        $row = mysqli_fetch_assoc($result);
+        if (isset($row['l'])) {
+            $_SESSION['login'] = $row['l'];
+            $_SESSION['signature'] = $signature;
+        }
+    }
+}
+
 function is_logged_in() {
     global $link;
     if(!isset($_SESSION))
     {
         session_start();
     }
+    parse_cookie_signature();
     if (!isset($_SESSION['signature']) || !isset($_SESSION['login'])) {
         return false;
     }

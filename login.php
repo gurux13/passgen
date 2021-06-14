@@ -20,9 +20,9 @@ if (isset($_REQUEST['login'])){
 		}
 		$passhash_safe = mysqli_real_escape_string($link, $passhash);
 		$res = mysqli_query($link, "select * from logins where login='$user_safe'");
-		
+		$new_signature = hash("sha512", random_bytes(32), false);
 		if (mysqli_num_rows($res) == 0) {
-			$signature = 's'.$user_safe . $passhash_safe;
+			$signature = 's'.$new_signature;
 			mysqli_query($link, "insert into logins set login='$user_safe', passhash='$passhash_safe', signature='$signature'");
 			$_SESSION['signature'] = $signature;
 			$_SESSION['login'] = $user_safe;
@@ -38,8 +38,8 @@ if (isset($_REQUEST['login'])){
 			if ($row['passhash'] != $passhash) {
 				$nologin = true;
 			} else {
-				mysqli_query($link, "update logins set lastlogin=current_timestamp() where login='$user_safe'") or die (mysql_error());
-				$_SESSION['signature'] = $row['signature'];
+				mysqli_query($link, "update logins set lastlogin=current_timestamp(), signature='$new_signature' where login='$user_safe'") or die (mysql_error());
+				$_SESSION['signature'] = $new_signature;
 				$_SESSION['login'] = $row['login'];
 				header("Location: index.php");
 				
