@@ -2,6 +2,9 @@
 error_reporting(E_ALL & ~E_DEPRECATED);
 ini_set("display_errors", 1);
 require_once 'util.php';
+if (!is_logged_in()) {
+    die("{}");
+}
 ensure_login();
 
 $signature = "";
