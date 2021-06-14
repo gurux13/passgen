@@ -5,6 +5,8 @@ require_once 'util.php';
 if (isset($_REQUEST["logout"])) {
 	unset($_SESSION['signature']);
 	setcookie('signature', null, time()+60*60*24*30, null, null, null, true);
+	header('Location: login.php');
+	die("Login <a href='login.php'>here</a>");
 }
 ensure_login();
 ?>
