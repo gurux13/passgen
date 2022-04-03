@@ -5,14 +5,14 @@ from flask import (
 )
 
 from db_models.user import User
-from db_models.variant import Resouce, ResourceVariation
+from db_models.variant import Resouce, ResourceAccount
 from globals import db
 
 bp = Blueprint('passgen', __name__)
 
 @bp.route('/', )
 def index():
-    return '<br>'.join([x.resource for x in db.session.query(Variant)])
+    # return '<br>'.join([x.resource for x in db.session.query(Variant)])
 
     return render_template('index.html')
 
