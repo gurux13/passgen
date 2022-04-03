@@ -1,0 +1,11 @@
+Flask
+
+SQLAlchemy
+alembic
+WTForms
+mysqlclient
+flask_script
+flask_compat
+flask_migrate
+dataclasses
+flask_wtf

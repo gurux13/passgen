@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+    <div class="form-container w3-half">
+        <form method="post">
+            <label for="username">Логин</label>
+            <input type="text" name="username" id="username" required>
+
+            <label for="password">Пароль</label>
+            <input type="password" name="password" id="password" required>
+
+            <input type="submit" value="Вход">
+        </form>
+    </div>
+{% endblock %}
