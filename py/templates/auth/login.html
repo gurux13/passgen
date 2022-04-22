@@ -3,14 +3,18 @@
 
 {% block content %}
     <div class="form-container w3-half">
+        {%if g.error is not none %}
+        <div>{{ g.error }}</div>
+        {% endif %}
         <form method="post">
             <label for="username">Логин</label>
             <input type="text" name="username" id="username" required>
 
             <label for="password">Пароль</label>
-            <input type="password" name="password" id="password" required>
+            <input type="password" name="password" id="user_password" required>
+            <input type="hidden" name="passhash" id="user_pass_hash">
 
-            <input type="submit" value="Вход">
+            <input type="button" value="Вход" id="submit-with-pw">
         </form>
     </div>
 {% endblock %}

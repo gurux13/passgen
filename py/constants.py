@@ -1,0 +1,2 @@
+class SessionKeys:
+    LOGIN = 'login'

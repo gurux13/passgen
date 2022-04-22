@@ -22,7 +22,7 @@ $(() => {
     });
     $("#submit-with-pw").click(async function () {
         const pw = $("#user_password").val();
-        if ($("#user_password_2")) {
+        if ($("#user_password_2").length) {
             if ($("#user_password_2").val() != pw) {
                 error("Пароли не совпадают!");
                 return;
