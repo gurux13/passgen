@@ -100,15 +100,15 @@ def login():
             return login_error(error)
         db = globals.db
 
-        user = db.session.query(User).filter_by(login=username)[0]
-        if user is None or not check_password_hash(user.passhash, passhash):
+        users = list(db.session.query(User).filter_by(login=username))
+        if len(users) != 1 or not check_password_hash(users[0].passhash, passhash):
             return login_error("Неверный логин или пароль")
 
         response = make_response(redirect(url_for('passgen.index')))
-        login_user(user, passhash)
+        login_user(users[0], passhash)
         # db.session.add(user)
         db.session.commit()
-        return redirect(url_for('passgen.index'))
+        return response #redirect(url_for('passgen.index'))
     return render_template('auth/login.html')
 
 @bp.route('/logout')

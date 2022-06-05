@@ -14,6 +14,67 @@ function copyResultToClipboard() {
 	return false;
 }
 
+let all_resources = []
+
+function load_resources() {
+	$.ajax({url: 'batchresources', success: (data) => {
+		all_resources = data;
+		searchResources();
+	}});
+}
+
+let last_search = undefined;
+
+function searchResources(unlimited = false) {
+	const new_text = $("#resource-name").val();
+	if (new_text == last_search && !unlimited) {
+		return;
+	}
+	last_search = new_text;
+	const matching = all_resources.filter(resource => resource.name.includes(new_text) || resource.comment.includes(new_text));
+	const matchingDiv = $("#matching-resources");
+	matchingDiv.html('');
+	let increases = 0;
+	const max_lines = 3;
+	let last_height = matchingDiv.height();
+	$("#matching-resources-extender").hide();
+	for (const match of matching) {
+		if (match.name == '') {
+			match.name = '&nbsp;';
+		}
+		element = $.parseHTML("<div class='resource-found'>" + match.name + "</div>");
+		matchingDiv.append(element);
+		if (last_height != matchingDiv.height()) {
+			++increases;
+			last_height = matchingDiv.height();
+			if (increases == max_lines) {
+				$("#matching-resources-extender").show();
+				if (!unlimited) {
+					$("#matching-resources-extender").text('▼');
+					break;
+				} else {
+					$("#matching-resources-extender").text('▲');
+				}
+			}
+		}
+	}
+}
+
+$(function() {
+	$("#resource-name").keyup(() => searchResources());
+	$("#resource-name").change(() => searchResources());
+	$("#matching-resources").on('click', ".resource-found", function() {
+		window.alert($(this).text());
+	});
+	$("#matching-resources-extender").click(() => {
+		last_search = undefined;
+
+		searchResources($("#matching-resources-extender").text() == '▼');
+	});
+	load_resources();
+});
+
+
 function snackbar(text) {
     // Get the snackbar DIV
     let x = document.getElementById("snackbar");
@@ -379,6 +440,7 @@ function setfields(variant, change_resource)
 let resetTimeout = null;
 
 $(document).ready(function(){
+	return;
 	resetall();
 	update();
 	$("#resource-input").bind('input',function(){
