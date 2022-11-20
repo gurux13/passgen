@@ -81,3 +81,25 @@ input[type=submit]:hover {
   padding-top: 0px;
   margin-top: 0px;
 }
+
+#resource-url-div {
+  width: 100%;
+  padding-top: 10px;
+}
+
+span.form-label {
+  display: block;
+  background-color: #efe;
+  padding: 4px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  font-size: large;
+}
+
+#resource-url {
+  display: inline-block;
+}
+
+#url-edit {
+  margin-right: 10px;
+}
