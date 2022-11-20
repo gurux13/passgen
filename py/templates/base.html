@@ -39,22 +39,22 @@
 </div>
 
 <!-- Sidebar -->
-<nav class="w3-sidebar w3-bar-block w3-collapse w3-large w3-theme-l5" id="mySidebar">
+<nav class="w3-sidebar w3-bar-block w3-collapse w3-large w3-theme-l5 nowidth" id="mySidebar">
     <a href="javascript:void(0)" onclick="w3_close()"
        class="w3-right w3-xlarge w3-padding-large w3-hover-black w3-hide-large" title="Close Menu">
         <i class="fa fa-remove"></i>
     </a>
-    <a href="{{ url_for('passgen.index') }}" class="w3-bar-item w3-button w3-hover-black a-nav">Генератор паролей</a>
+    <a href="{{ url_for('passgen.index') }}" class="w3-bar-item w3-button w3-hover-black a-nav menu-item">Генератор паролей</a>
     {% if g.user %}
-        <a href="{{ url_for('passgen.resources') }}" class="w3-bar-item w3-button w3-hover-black a-nav">Ресурсы</a>
+        <a href="{{ url_for('passgen.resources') }}" class="w3-bar-item w3-button w3-hover-black a-nav menu-item">Ресурсы</a>
     {% endif %}
-    <a href="#" class="w3-bar-item w3-button w3-hover-black a-nav">О проекте</a>
+    <a href="#" class="w3-bar-item w3-button w3-hover-black a-nav menu-item">О проекте</a>
     {% if g.user %}
-        <a class="w3-bar-item w3-button w3-hover-black a-nav" href="{{ url_for('auth.logout') }}">👤 Выйти</a>
+        <a class="w3-bar-item w3-button w3-hover-black a-nav menu-item" href="{{ url_for('auth.logout') }}">👤 Выйти</a>
         <div class="below">Login: <span class="username">{{ g.user.login }}</span></div>
     {% else %}
-        <a class="w3-bar-item w3-button w3-hover-black a-nav" href="{{ url_for('auth.login') }}">👤 Войти</a>
-        <a class="w3-bar-item w3-button w3-hover-black a-nav"
+        <a class="w3-bar-item w3-button w3-hover-black a-nav menu-item" href="{{ url_for('auth.login') }}">👤 Войти</a>
+        <a class="w3-bar-item w3-button w3-hover-black a-nav menu-item"
            href="{{ url_for('auth.register') }}">Зарегистрироваться</a>
     {% endif %}
 

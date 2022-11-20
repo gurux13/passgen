@@ -5,7 +5,7 @@ class ResourceAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     resource_id = db.Column(db.Integer, db.ForeignKey('resource.id', use_alter=True))
     resource = db.relation('Resource', foreign_keys=resource_id, backref=db.backref("accounts",cascade="all, delete",
-        passive_deletes=True ))
+        passive_deletes=True))
 
     pass_part = db.Column(db.String(128))
     human_readable = db.Column(db.String(256))

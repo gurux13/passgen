@@ -103,3 +103,13 @@ span.form-label {
 #url-edit {
   margin-right: 10px;
 }
+
+.menu-item {
+  border-radius: 20px;
+  margin: 0px 5px;
+  width: auto!important;
+}
+
+.nowidth {
+  width: auto!important;
+}

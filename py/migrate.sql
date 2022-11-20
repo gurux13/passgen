@@ -25,7 +25,10 @@ SELECT
     `variants`.`resource`,
     `variants`.`resource`,
     ''
-FROM `passgen`.`variants`;
+FROM `passgen`.`variants`
+WHERE `variants`.`login_id` IN (
+    select id from `passgen_py`.`user`
+);
 
 INSERT INTO `passgen_py`.`resource_account`
 (
