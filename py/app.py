@@ -9,25 +9,23 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import os
 
-
-
-
-# I utterly hate Python sometimes
-# https://stackoverflow.com/questions/46622408/flask-socket-io-message-events-in-different-files
-
 local_mode = len(sys.argv) == 2 and sys.argv[1] == 'local'
 
 if not local_mode:
-    critical_env = ['MYSQL_USER', 'MYSQL_PASSWORD']
+    critical_env = ['MYSQL_USER', 'MYSQL_PASSWORD', 'FLASK_KEY']
     for env in critical_env:
         if env not in os.environ or len(os.environ[env]) == 0:
             raise Exception("Missing critical env " + env)
 
 MYSQL_USER = '' if local_mode else os.environ['MYSQL_USER']
 MYSQL_PASSWORD = '' if local_mode else os.environ['MYSQL_PASSWORD']
+FLASK_KEY = '' if local_mode else os.environ['FLASK_KEY']
 theapp = None
+
+
 def create_app():
     app = Flask(__name__)
+    app.secret_key = FLASK_KEY
     if not local_mode:
         app.config[
             'SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://' + MYSQL_USER + ':' + \
@@ -43,8 +41,6 @@ def create_app():
     app.register_blueprint(passgen.bp)
 
     # install libmysqlclient-dev!
-
-
     global theapp
     theapp = app
 

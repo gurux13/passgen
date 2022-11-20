@@ -1,2 +1,130 @@
 {% extends 'base.html' %}
 {% block title %}Генератор паролей{% endblock %}
+{% block content %}
+    <script src="{{ url_for('static', filename='js/sha.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/gen.js') }}"></script>
+
+
+    <div id="snackbar"></div>
+    <div id="cover" class="cover">&nbsp;</div>
+
+    <div id="resource-select">
+
+        <span class="form-label">Ресурс</span><input type="text" id="resource-name">
+        <div id="matching-resources"></div>
+        <div id="matching-resources-extender">▼</div>
+        <div id="resource-url-div">
+            <span class="form-label">URL</span>
+            <div
+            <button id="url-edit">✎</button>
+            <input type="url" id="resource-url" style="display: none">
+            <a href="#" id="resource-a" target="_blank">https://</a>
+        </div>
+    </div>
+
+    <div id="account-select">
+        Аккаунт
+    </div>
+
+
+    <div class="res" style="display:none; overflow:hidden">
+        <h2>Результат</h2>
+        <table>
+            <tr>
+                <td>SHA1 мастер-пароля</td>
+                <td id="master-sha" colspan="2"></td>
+            </tr>
+            <tr>
+                <td>Результат:</td>
+                <td class="resulting"><a class="repeatable" href="#" onclick="copyResultToClipboard(); return false;"
+                                         id='result'></a></td>
+            </tr>
+            <tr>
+                <td>Очистка:</td>
+                <td><a href="#" class="repeatable" id="time-remaining" onclick="postponeCleanup(); return false"></a> <a
+                        href="#" class="repeatable" id="clean-now" onclick="cleanup(); return false;">Сейчас</a></td>
+            </tr>
+
+        </table>
+    </div>
+    <h2>Данные</h2>
+    <form method="post">
+        <table cellspacing="0" border="0">
+            <tr>
+                <td>Ресурс:</td>
+                <td><input type="text" name="resource" id="resource-input" list="resources" autocomplete="false"
+                           class="gen-input"><br>
+                    <a href="#" class="res-control" id="res-control">Управление ресурсами</a>
+
+                    <div id="resources-list" class="res-list">
+
+
+                        <table id="resources-table">
+
+
+                        </table>
+
+                    </div>
+
+                    <datalist id="resources">
+
+                    </datalist>
+
+                </td>
+                <td>
+                    <button onclick="resetresource();" type="button" class="reset">X</button>
+                </td>
+
+
+            </tr>
+            <tr>
+                <td>Длина:</td>
+                <td><input type="text" name="length" id="length-input" class="gen-input"></td>
+                <td>
+                    <button onclick="resetlength();" type="button" class="reset">X</button>
+                </td>
+            </tr>
+            <tr>
+                <td>Ревизия:</td>
+                <td><input type="text" name="revision" id="revision-input" class="gen-input"></td>
+                <td>
+                    <button onclick="resetrev();" type="button" class="reset">X</button>
+                </td>
+            </tr>
+            <tr>
+                <td>Ограничения:</td>
+                <td>
+                    <input type="checkbox" name="letters" id="letters-input" class="gen-input"><span
+                        class="cb">Буквы</span><br>
+                    <input type="checkbox" name="digits" id="digits-input" class="gen-input"><span
+                        class="cb">Цифры</span><br>
+                    <input type="checkbox" name="symbols" id="symbols-input" class="gen-input"><span class="cb">Спец. символы</span><br>
+                    <input type="checkbox" name="underscore" id="underscore-input" class="gen-input"><span class="cb">Подчёркивание</span><br>
+                </td>
+                <td>
+                    <button onclick="resetlimits();" type="button" class="reset">X</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Мастер-пароль:</td>
+                <td><input type="password" name="master" id="master-input" class="input-master gen-input"></td>
+                <td>
+                    <button onclick="resetmaster();" type="button" class="reset">X</button>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <input type="button" name="generate" value="Генерировать" onclick="generate_click()">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <input type="button" value="Очистить" onclick="resetall();">
+                </td>
+            </tr>
+        </table>
+
+    </form>
+
+{% endblock %}

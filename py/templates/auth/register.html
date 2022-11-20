@@ -2,19 +2,23 @@
 {% block title %}Регистрация{% endblock %}
 
 {% block content %}
+
     <div class="form-container w3-half">
         <form method="post">
+            {%if g.error is not none %}
+            <div>{{ g.error }}</div>
+            {% endif %}
             <label for="username">Логин</label>
             <input type="text" name="username" id="username" required>
 
             <label for="password">Пароль</label>
-            <input type="password" name="password" id="password" required>
+            <input type="password" name="password" id="user_password" required>
 
             <label for="password">Подтверждение пароля</label>
-            <input type="password" name="password2" id="password" required>
+            <input type="password" name="password2" id="user_password_2" required>
+            <input type="hidden" name="passhash" id="user_pass_hash">
 
-
-            <input type="submit" value="Register">
+            <input type="button" value="Регистрация" id="submit-with-pw">
         </form>
     </div>
 {% endblock %}
