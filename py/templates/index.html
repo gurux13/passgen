@@ -6,16 +6,17 @@
 
 
     <div id="snackbar"></div>
-    <div id="cover" class="cover">&nbsp;</div>
 
     <div id="resource-select">
 
-        <span class="form-label">Ресурс</span><input type="text" id="resource-name">
+        <span class="form-label form-label-first form-label-primary">Ресурс</span>
+        <div class="resource-finder"><input type="text" id="resource-name">
         <div id="matching-resources"></div>
         <div id="matching-resources-extender">▼</div>
+            </div>
         <div id="resource-url-div">
-            <span class="form-label">URL</span>
-            <div
+            <span class="form-label-secondary form-label">URL</span>
+
             <button id="url-edit">✎</button>
             <input type="url" id="resource-url" style="display: none">
             <a href="#" id="resource-a" target="_blank">https://</a>
@@ -23,7 +24,8 @@
     </div>
 
     <div id="account-select">
-        Аккаунт
+            <span class="form-label form-label-primary">Аккаунт</span><input type="text" id="account-name">
+
     </div>
 
 
@@ -47,7 +49,7 @@
 
         </table>
     </div>
-    <h2>Данные</h2>
+    <span class="form-label form-label-primary">Параметры</span>
     <form method="post">
         <table cellspacing="0" border="0">
             <tr>

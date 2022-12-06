@@ -34,17 +34,23 @@ function searchResources(unlimited = false) {
     }
     last_search = new_text;
     const matching = all_resources.filter(resource => resource.name.includes(new_text) || resource.comment.includes(new_text));
+    const shouldShowNew = new_text && !matching.some(x => x.name.toLowerCase() === new_text.toLowerCase());
     const matchingDiv = $("#matching-resources");
     matchingDiv.html('');
+
     let increases = 0;
     const max_lines = 3;
     let last_height = matchingDiv.height();
     $("#matching-resources-extender").hide();
+    if (shouldShowNew) {
+        const element = $.parseHTML("<div title='Создать новый ресурс' class='resource-found new-resource'><span class='new-resource-label'><img height='15' width='15' src='/static/img/create.png'/></span>" + new_text + "</div>");
+        matchingDiv.append(element);
+    }
     for (const match of matching) {
         if (match.name == '') {
             match.name = '&nbsp;';
         }
-        element = $.parseHTML("<div class='resource-found'>" + match.name + "</div>");
+        const element = $.parseHTML("<div class='resource-found'>" + match.name + "</div>");
         matchingDiv.append(element);
         if (last_height != matchingDiv.height()) {
             ++increases;

@@ -1,8 +1,8 @@
 .current-link {
-    background-color: teal;
+    background-color: #ee6002;
 }
 .current-link:hover {
-    background-color: teal!important;
+    /*background-color: teal!important;*/
 }
 
 /* Style inputs with type="text", select elements and textareas */
@@ -13,7 +13,7 @@ input[type=text], input[type=password], select, textarea {
   border-radius: 4px; /* Rounded borders */
   box-sizing: border-box; /* Make sure that padding and width stays in place */
   margin-top: 6px; /* Add a top margin */
-  margin-bottom: 16px; /* Bottom margin */
+  margin-bottom: 6px; /* Bottom margin */
   resize: vertical /* Allow the user to vertically resize the textarea (not horizontally) */
 }
 
@@ -59,7 +59,13 @@ input[type=submit]:hover {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-around;
-  border: 1px solid #ddd;
+}
+.resource-finder {
+    border: 1px solid #ddd;
+}
+.resource-finder input {
+  margin: 0;
+  border-radius: 0;
 }
 .resource-found {
   flex: 1;
@@ -72,6 +78,12 @@ input[type=submit]:hover {
   background-color: #eee;
   display: inline;
   width: fit-content;
+}
+.new-resource {
+  background-color: #ffe !important;
+}
+.new-resource-label {
+  padding-right: 0.5em;
 }
 #matching-resources-extender {
   display: none;
@@ -87,13 +99,28 @@ input[type=submit]:hover {
   padding-top: 10px;
 }
 
+span.form-label-first {
+  margin-top: 0px !important;
+}
+span.form-label-primary {
+  background: #6002ee;
+  background: linear-gradient(90deg,  rgba(96,2,238,0.1) 0%, rgba(96,2,238,0.5) 100%);
+  font-size: large;
+}
 span.form-label {
   display: block;
-  background-color: #efe;
-  padding: 4px;
-  margin-top: 4px;
+  /*color: white;*/
+  padding: 0.3em 1em;
+  /*padding: 4px;*/
+  margin-top: 34px;
   margin-bottom: 4px;
-  font-size: large;
+
+}
+
+span.form-label-secondary {
+  background: #d602ee;
+  background: linear-gradient(90deg, rgba(238,96,2,0.1) 0%, rgba(238,96,2,0.5) 100%);
+  font-size: medium;
 }
 
 #resource-url {
@@ -105,9 +132,7 @@ span.form-label {
 }
 
 .menu-item {
-  border-radius: 20px;
-  margin: 0px 5px;
-  width: auto!important;
+  /*width: auto!important;*/
 }
 
 .nowidth {
