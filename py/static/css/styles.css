@@ -55,7 +55,7 @@ input[type=submit]:hover {
   font-weight: bold;
 }
 
-#matching-resources {
+.matching-values {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-around;
@@ -78,6 +78,11 @@ input[type=submit]:hover {
   background-color: #eee;
   display: inline;
   width: fit-content;
+  cursor: pointer;
+}
+.selected-value-new {
+  display: none;
+  color: darkred;
 }
 .new-resource {
   background-color: #ffe !important;
@@ -85,8 +90,8 @@ input[type=submit]:hover {
 .new-resource-label {
   padding-right: 0.5em;
 }
-#matching-resources-extender {
-  display: none;
+.matching-extender {
+    display: none;
   background-color: #ddd;
   text-align: center;
   width: 100%;
@@ -103,23 +108,48 @@ span.form-label-first {
   margin-top: 0px !important;
 }
 span.form-label-primary {
-  background: #6002ee;
-  background: linear-gradient(90deg,  rgba(96,2,238,0.1) 0%, rgba(96,2,238,0.5) 100%);
+  background: rgba(96,2,238,0.09);
+  /*background: linear-gradient(90deg,  rgba(96,2,238,0.05) 0%, rgba(96,2,238,0.2) 100%);*/
   font-size: large;
+}
+.selected-object {
+  background: #eeffff;
+  padding: 0.3em 1em;
+  font-weight: bold;
+  font-size: large;
+}
+.foldable .form-label {
+  cursor: pointer;
+}
+.folded-icon {
+  width: 1em;
+  display: inline-block;
+}
+.unfolded .folded-icon {
+
+}
+.folded .folded-icon {
+  transform: rotate(270deg);
+
+}
+
+.selected-value {
+  font-family: monospace;
+  font-weight: bold;
 }
 span.form-label {
   display: block;
   /*color: white;*/
   padding: 0.3em 1em;
   /*padding: 4px;*/
-  margin-top: 34px;
-  margin-bottom: 4px;
+  margin-top: 8px;
+  /*margin-bottom: 4px;*/
 
 }
 
 span.form-label-secondary {
-  background: #d602ee;
-  background: linear-gradient(90deg, rgba(238,96,2,0.1) 0%, rgba(238,96,2,0.5) 100%);
+  background: rgba(238,96,2,0.08);
+  /*background: linear-gradient(90deg, rgba(238,96,2,0.05) 0%, rgba(238,96,2,0.2) 100%);*/
   font-size: medium;
 }
 

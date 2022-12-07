@@ -14,7 +14,9 @@ function copyResultToClipboard() {
     return false;
 }
 
-let all_resources = []
+let all_resources = [];
+let selected_resource = undefined;
+let selected_account = undefined;
 
 function load_resources() {
     $.ajax({
@@ -26,6 +28,78 @@ function load_resources() {
 }
 
 let last_search = undefined;
+
+function makeNewAccount(name) {
+    return {
+        "id": null,
+        "pass_part": "",
+        "human_readable": name,
+        "length": 12,
+        "letters": true,
+        "digits": true,
+        "symbols": true,
+        "underscore": true,
+        "revision": "0"
+    }
+}
+
+function makeNewResource(name) {
+    return {
+        "name": name,
+        "id": null,
+        "default_account_id": null,
+        "accounts": [
+            makeNewAccount("По умолчанию"),
+        ],
+        "url": "https://" + name,
+        "comment": "",
+    }
+}
+
+let last_account_search = null;
+
+function searchAccounts(unlimited = false) {
+    const new_text = $("#account-name").val();
+    if (new_text == last_account_search && !unlimited) {
+        return;
+    }
+    last_account_search = new_text;
+    const matching = selected_resource.accounts.filter(account => account.pass_part?.includes(new_text) || account.human_readable?.includes(new_text));
+    const shouldShowNew = new_text && !matching.some(x => x.human_readable?.toLowerCase() === new_text.toLowerCase());
+    const matchingDiv = $("#matching-accounts");
+    matchingDiv.html('');
+
+    let increases = 0;
+    const max_lines = 4;
+    let last_height = matchingDiv.height();
+    $("#matching-accounts-extender").hide();
+    if (shouldShowNew) {
+        const element = $.parseHTML("<div title='Создать новый аккаунт' class='resource-found new-resource'><span class='new-resource-label'><img height='15' width='15' src='/static/img/create.png'/></span>" + new_text + "</div>");
+        matchingDiv.append(element);
+    }
+    for (const match of matching) {
+        if (match.human_readable == '' || match.human_readable == null) {
+            match.human_readable = '&nbsp;';
+        }
+        const element = $.parseHTML("<div class='resource-found'>" + match.human_readable + "</div>");
+        matchingDiv.append(element);
+        if (last_height != matchingDiv.height()) {
+            ++increases;
+            last_height = matchingDiv.height();
+            if (increases == max_lines) {
+
+                $("#matching-accounts-extender").show();
+                if (!unlimited) {
+                    $("#matching-accounts-extender").text('▼');
+                    element[0].remove();
+                    break;
+                } else {
+                    $("#matching-accounts-extender").text('▲');
+                }
+            }
+        }
+    }
+}
 
 function searchResources(unlimited = false) {
     const new_text = $("#resource-name").val();
@@ -39,7 +113,7 @@ function searchResources(unlimited = false) {
     matchingDiv.html('');
 
     let increases = 0;
-    const max_lines = 3;
+    const max_lines = 4;
     let last_height = matchingDiv.height();
     $("#matching-resources-extender").hide();
     if (shouldShowNew) {
@@ -56,9 +130,11 @@ function searchResources(unlimited = false) {
             ++increases;
             last_height = matchingDiv.height();
             if (increases == max_lines) {
+
                 $("#matching-resources-extender").show();
                 if (!unlimited) {
                     $("#matching-resources-extender").text('▼');
+                    element[0].remove();
                     break;
                 } else {
                     $("#matching-resources-extender").text('▲');
@@ -67,19 +143,104 @@ function searchResources(unlimited = false) {
         }
     }
 }
+function reloadAccount() {
+    $("#selected-account").text(selected_account.human_readable);
+    const isNew = selected_account.id === null;
+    if (isNew) {
+        $("#selected-account-new").show();
+    } else {
+        $("#selected-account-new").hide();
+    }
+}
+function reloadResource() {
+    $("#selected-resource").text(selected_resource.name);
+    const isNew = selected_resource.id === null;
+    if (isNew) {
+        $("#selected-resource-new").show();
+    } else {
+        $("#selected-resource-new").hide();
+    }
+    $("#resource-url").val(selected_resource.url);
+    $("#resource-a").attr('href', selected_resource.url);
+    $("#resource-a").text(selected_resource.url);
+
+}
+
+function onAccountSelected(account, isNew) {
+    let theaccount = selected_resource.accounts.filter(a => a.human_readable === account)[0];
+
+    if (theaccount === undefined && !isNew) {
+        window.alert("WTF?!");
+        return;
+    }
+    if (isNew) {
+        theaccount = makeNewAccount(account);
+    }
+    selected_account = theaccount;
+    $("#account-foldable .form-label").click();
+    reloadAccount();
+}
+
+function onResourceSelected(resource, isNew) {
+    let theresource = all_resources.filter(r => r.name === resource)[0];
+    if (theresource === undefined && !isNew) {
+        window.alert("WTF?!");
+        return;
+    }
+    if (isNew) {
+        theresource = makeNewResource(resource);
+    }
+    selected_resource = theresource;
+    $("#when-resource-selected").slideUp("fast", complete = () => {
+        reloadResource();
+        searchAccounts();
+        if (selected_resource.accounts.length == 1) {
+            $("#matching-accounts .resource-found").click();
+        }
+        $("#when-resource-selected").slideDown("fast");
+        $("#resource-foldable .form-label").click();
+        $("#resource-a").show();
+        $("#resource-url").hide();
+    });
+}
 
 $(function () {
     $("#resource-name").keyup(() => searchResources());
     $("#resource-name").change(() => searchResources());
+    $("#account-name").keyup(() => searchAccounts());
+    $("#account-name").change(() => searchAccounts());
+    $("#matching-accounts-extender").click(() => {
+        last_search = undefined;
+        searchAccounts($("#matching-accounts-extender").text() == '▼');
+    });
     $("#matching-resources").on('click', ".resource-found", function () {
-        window.alert($(this).text());
+        // window.alert($(this).text());
+        onResourceSelected($(this).text(), $(this)[0].classList.contains('new-resource'));
+    });
+    $("#matching-accounts").on('click', ".resource-found", function () {
+        // window.alert($(this).text());
+        onAccountSelected($(this).text(), $(this)[0].classList.contains('new-resource'));
     });
     $("#matching-resources-extender").click(() => {
         last_search = undefined;
 
         searchResources($("#matching-resources-extender").text() == '▼');
     });
-    $("#resource-url").on('keypress', function(ev) {
+    $(".foldable .form-label").click(function () {
+        const parent = $(this).parent();
+        const isFolded = parent[0].classList.contains("folded");
+        if (isFolded) {
+            $("div.foldee", parent).slideDown("fast");
+            $(parent).addClass("unfolded");
+            $(parent).removeClass("folded");
+        } else {
+            $("div.foldee", parent).slideUp("fast");
+            $(parent).addClass("folded");
+            $(parent).removeClass("unfolded");
+        }
+
+    });
+    $("#resource-url").on('keypress', function (ev) {
         if (ev.key === "Enter") {
             $("#url-edit").click();
         }
