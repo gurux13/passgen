@@ -104,6 +104,11 @@ input[type=submit]:hover {
   padding-top: 10px;
 }
 
+.selected-value-changed {
+  color: darkred;
+  margin-left: 1em;
+}
+
 span.form-label-first {
   margin-top: 0px !important;
 }

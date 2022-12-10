@@ -38,6 +38,31 @@
         </div>
 
 
+
+
+        <div class="foldable unfolded" id="params-foldable">
+            <span class="form-label form-label-primary"><span
+                    class="folded-icon">▼</span>Параметры <span
+                    id="selected-params" class="selected-value"></span><span id="selected-params-changed"
+                                                                             class="selected-value-changed">*</span></span>
+            <div class="foldee">
+                <span class="form-label form-label-secondary">Длина</span>
+                <input type="text" name="length" id="length-input" class="gen-input">
+                <span class="form-label form-label-secondary">Ревизия</span>
+                <input type="text" name="revision" id="revision-input" class="gen-input">
+                <span class="form-label form-label-secondary">Составляющие пароля</span>
+                <input type="checkbox" name="letters" id="letters-input" class="gen-input"><span
+                    class="cb">Буквы</span><br>
+                <input type="checkbox" name="digits" id="digits-input" class="gen-input"><span
+                    class="cb">Цифры</span><br>
+                <input type="checkbox" name="symbols" id="symbols-input" class="gen-input"><span class="cb">Спец. символы</span><br>
+                <input type="checkbox" name="underscore" id="underscore-input" class="gen-input"><span
+                    class="cb">Подчёркивание</span><br>
+            </div>
+        </div>
+        <span class="form-label-secondary form-label">Мастер-пароль</span>
+        <input type="password" name="master" id="master-input" class="input-master">
+        <input type="button" name="generate" value="Генерировать" onclick="generate_click()">
         <div class="res" style="display:none; overflow:hidden">
             <h2>Результат</h2>
             <table>
@@ -61,46 +86,5 @@
 
             </table>
         </div>
-
-        <div class="foldable unfolded" id="params-foldable">
-            <span class="form-label form-label-primary"><span
-                    class="folded-icon">▼</span>Параметры <span
-                    id="selected-params" class="selected-value"></span><span id="selected-params-changed"
-                                                                             class="selected-value-changed">*</span></span>
-            <div class="foldee">
-                <span class="form-label form-label-secondary">Длина</span>
-                <input type="text" name="length" id="length-input" class="gen-input">
-                <span class="form-label form-label-secondary">Ревизия</span>
-                <input type="text" name="revision" id="revision-input" class="gen-input">
-                <span class="form-label form-label-secondary">Составляющие пароля</span>
-                <input type="checkbox" name="letters" id="letters-input" class="gen-input"><span
-                    class="cb">Буквы</span><br>
-                <input type="checkbox" name="digits" id="digits-input" class="gen-input"><span
-                    class="cb">Цифры</span><br>
-                <input type="checkbox" name="symbols" id="symbols-input" class="gen-input"><span class="cb">Спец. символы</span><br>
-                <input type="checkbox" name="underscore" id="underscore-input" class="gen-input"><span
-                    class="cb">Подчёркивание</span><br>
-            </div>
-        </div>
-            <table cellspacing="0" border="0">
-                <tr>
-                    <td>Мастер-пароль:</td>
-                    <td><input type="password" name="master" id="master-input" class="input-master"></td>
-                    <td>
-                        <button onclick="resetmaster();" type="button" class="reset">X</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="3">
-                        <input type="button" name="generate" value="Генерировать" onclick="generate_click()">
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="3">
-                        <input type="button" value="Очистить" onclick="resetall();">
-                    </td>
-                </tr>
-            </table>
-
     </div>
 {% endblock %}

@@ -36,11 +36,6 @@ function makeNewAccount(name) {
         "id": null,
         "pass_part": "",
         "human_readable": name,
-        "length": 12,
-        "letters": true,
-        "digits": true,
-        "symbols": true,
-        "underscore": true,
         "revision": "0"
     }
 }
@@ -55,10 +50,23 @@ function makeNewResource(name) {
         ],
         "url": "https://" + name,
         "comment": "",
+        "length": 12,
+        "letters": true,
+        "digits": true,
+        "symbols": true,
+        "underscore": true,
     }
 }
 
 let last_account_search = null;
+
+function setFold(foldable, folded) {
+    const isFolded = foldable[0].classList.contains('folded');
+    if (isFolded == folded) {
+        return;
+    }
+    $(".form-label", foldable).click();
+}
 
 function searchAccounts(unlimited = false) {
     const new_text = $("#account-name").val();
@@ -147,8 +155,10 @@ function reloadAccount() {
     const isNew = selected_account.id === null;
     if (isNew) {
         $("#selected-account-new").show();
+        setFold($("#params-foldable"), false);
     } else {
         $("#selected-account-new").hide();
+        setFold($("#params-foldable"), true);
     }
     unsaved_account = structuredClone(selected_account);
     setHtmlParamsFromSelection();
@@ -223,6 +233,18 @@ function recalcUnsavedParams() {
     } else {
         $("#selected-params-changed").hide();
     }
+    const revision = $("#revision-input").val();
+    const length = parseInt($("#length-input").val());
+    const letters = !!$("#letters-input").prop("checked") ? 'A' : '';
+    const digits = !!$("#digits-input").prop("checked") ? '0' : '';
+    const symbols = !!$("#symbols-input").prop("checked") ? '@' : '';
+    const underscore = !!$("#underscore-input").prop("checked") ? '_' : '';
+    let allowed = letters + digits + symbols + underscore;
+    if (allowed.length == 0) {
+        allowed = '????';
+    }
+    const paramString = '|' + length + '| #' + revision + ' ' + allowed;
+    $("#selected-params").text(paramString);
 }
 
 function onParamsChangeInHtml() {
