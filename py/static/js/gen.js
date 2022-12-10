@@ -213,6 +213,18 @@ function onAccountSelected(account, isDefault, isNew) {
     reloadAccount();
 }
 
+function selectDefaultAccount() {
+    if (selected_resource.accounts.length == 1) {
+        $("#matching-accounts .resource-found").click();
+    }
+    else {
+        const account = selected_resource.accounts.filter(x => x.id == selected_resource.default_account_id)[0];
+        if (account != null) {
+            onAccountSelected(account.human_readable, account.human_readable == null, false);
+        }
+    }
+}
+
 function onResourceSelected(resource, isNew) {
     let theresource = all_resources.filter(r => r.name === resource)[0];
     if (theresource === undefined && !isNew) {
@@ -228,9 +240,7 @@ function onResourceSelected(resource, isNew) {
     $("#when-resource-selected").slideUp("fast", complete = () => {
         reloadResource();
         searchAccounts();
-        if (selected_resource.accounts.length == 1) {
-            $("#matching-accounts .resource-found").click();
-        }
+        selectDefaultAccount();
         $("#when-resource-selected").slideDown("fast");
         $("#resource-foldable .form-label").click();
         $("#resource-a").show();
