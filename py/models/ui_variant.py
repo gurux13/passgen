@@ -7,11 +7,6 @@ class ResourceAccountModel:
     id: int
     pass_part: str
     human_readable: str
-    length: int
-    letters: bool
-    digits: bool
-    symbols: bool
-    underscore: bool
     revision: str
 
 @dataclass
@@ -22,4 +17,9 @@ class ResourceModel:
     name: str
     url: str
     comment: str
+    length: int
+    letters: bool
+    digits: bool
+    symbols: bool
+    underscore: bool
 

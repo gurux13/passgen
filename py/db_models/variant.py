@@ -9,11 +9,6 @@ class ResourceAccount(db.Model):
 
     pass_part = db.Column(db.String(128))
     human_readable = db.Column(db.String(256))
-    length = db.Column(db.Integer)
-    letters = db.Column(db.Boolean)
-    digits = db.Column(db.Boolean)
-    symbols = db.Column(db.Boolean)
-    underscore = db.Column(db.Boolean)
     revision = db.Column(db.String(256))
 
 class Resource(db.Model):
@@ -27,4 +22,11 @@ class Resource(db.Model):
     name = db.Column(db.String(256))
     url = db.Column(db.String(256))
     comment = db.Column(db.String(4096))
+
+    length = db.Column(db.Integer)
+    letters = db.Column(db.Boolean)
+    digits = db.Column(db.Boolean)
+    symbols = db.Column(db.Boolean)
+    underscore = db.Column(db.Boolean)
+
 

@@ -18,13 +18,23 @@ INSERT INTO `passgen_py`.`resource`
 `default_account_id`,
 `name`,
 `url`,
-`comment`)
+`comment`,
+ `length`,
+`letters`,
+`digits`,
+`symbols`,
+`underscore`)
 SELECT
 	`variants`.`login_id`,
     NULL,
     `variants`.`resource`,
     `variants`.`resource`,
-    ''
+    '',
+        `variants`.`length`,
+    `variants`.`letters`,
+    `variants`.`digits`,
+    `variants`.`symbols`,
+    `variants`.`underscore`
 FROM `passgen`.`variants`
 WHERE `variants`.`login_id` IN (
     select id from `passgen_py`.`user`
@@ -34,20 +44,11 @@ INSERT INTO `passgen_py`.`resource_account`
 (
 `resource_id`,
 `pass_part`,
-`length`,
-`letters`,
-`digits`,
-`symbols`,
-`underscore`,
 `revision`)
 SELECT
     resource.id,
     variants.resource,
-    `variants`.`length`,
-    `variants`.`letters`,
-    `variants`.`digits`,
-    `variants`.`symbols`,
-    `variants`.`underscore`,
+
     `variants`.`revision`
 FROM `passgen`.`variants`, passgen_py.resource
 where variants.resource = resource.name;

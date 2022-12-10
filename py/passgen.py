@@ -33,11 +33,6 @@ class EnhancedJSONEncoder(json.JSONEncoder):
                 return dataclasses.asdict(o)
             return super().default(o)
 
-def fixdefaultaccount(account: ResourceAccountModel):
-    if account.human_readable is None:
-        account.human_readable = "По умолчанию"
-    return account
-
 @bp.route('/batchresources')
 @db_view
 @login_required
@@ -48,10 +43,15 @@ def batchresources():
             ResourceModel(
                 db.id,
                 db.default_account_id,
-                [fixdefaultaccount(ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.length, x.letters, x.digits, x.symbols, x.underscore, x.revision)) for x in db.accounts],
+                [ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.revision) for x in db.accounts],
                 db.name,
                 db.url,
-                db.comment
+                db.comment,
+                db.length,
+                db.letters,
+                db.digits,
+                db.symbols,
+                db.underscore,
             ), all_resources)
     response = app.response_class(
         response=json.dumps(list(all_resources_model), cls=EnhancedJSONEncoder),

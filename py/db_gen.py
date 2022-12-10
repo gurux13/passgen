@@ -7,7 +7,7 @@
 # PREPARE stmt FROM @tables;
 # EXECUTE stmt;
 # DEALLOCATE PREPARE stmt;
-# SET FOREIGN_KEY_CHECKS = 1; user
+# SET FOREIGN_KEY_CHECKS = 1;
 
 
 # $env:MYSQL_USER='passgen'

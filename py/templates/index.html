@@ -10,7 +10,8 @@
     {#    <div id="resource-select">#}
     <div class="foldable unfolded" id="resource-foldable">
         <span class="form-label form-label-first form-label-primary"><span class="folded-icon">▼</span>Ресурс <span
-                id="selected-resource" class="selected-value"></span><span id="selected-resource-new" class="selected-value-new"> (новый)</span></span>
+                id="selected-resource" class="selected-value"></span><span id="selected-resource-new"
+                                                                           class="selected-value-new"> (новый)</span></span>
         <div class="resource-finder foldee"><input type="text" id="resource-name">
             <div id="matching-resources" class="matching-values"></div>
             <div id="matching-resources-extender" class="matching-extender">▼</div>
@@ -27,8 +28,9 @@
         </div>
 
         <div class="foldable unfolded" id="account-foldable">
-        <span class="form-label form-label-first form-label-primary"><span class="folded-icon">▼</span>Аккаунт <span
-                id="selected-account" class="selected-value"></span><span id="selected-account-new" class="selected-value-new"> (новый)</span></span>
+        <span class="form-label form-label-primary"><span class="folded-icon">▼</span>Аккаунт <span
+                id="selected-account" class="selected-value"></span><span id="selected-account-new"
+                                                                          class="selected-value-new"> (новый)</span></span>
             <div class="account-finder foldee"><input type="text" id="account-name">
                 <div id="matching-accounts" class="matching-values"></div>
                 <div id="matching-accounts-extender" class="matching-extender">▼</div>
@@ -59,68 +61,31 @@
 
             </table>
         </div>
-        <form method="post">
+
+        <div class="foldable unfolded" id="params-foldable">
+            <span class="form-label form-label-primary"><span
+                    class="folded-icon">▼</span>Параметры <span
+                    id="selected-params" class="selected-value"></span><span id="selected-params-changed"
+                                                                             class="selected-value-changed">*</span></span>
+            <div class="foldee">
+                <span class="form-label form-label-secondary">Длина</span>
+                <input type="text" name="length" id="length-input" class="gen-input">
+                <span class="form-label form-label-secondary">Ревизия</span>
+                <input type="text" name="revision" id="revision-input" class="gen-input">
+                <span class="form-label form-label-secondary">Составляющие пароля</span>
+                <input type="checkbox" name="letters" id="letters-input" class="gen-input"><span
+                    class="cb">Буквы</span><br>
+                <input type="checkbox" name="digits" id="digits-input" class="gen-input"><span
+                    class="cb">Цифры</span><br>
+                <input type="checkbox" name="symbols" id="symbols-input" class="gen-input"><span class="cb">Спец. символы</span><br>
+                <input type="checkbox" name="underscore" id="underscore-input" class="gen-input"><span
+                    class="cb">Подчёркивание</span><br>
+            </div>
+        </div>
             <table cellspacing="0" border="0">
                 <tr>
-                    <td>Ресурс:</td>
-                    <td><input type="text" name="resource" id="resource-input" list="resources" autocomplete="false"
-                               class="gen-input"><br>
-                        <a href="#" class="res-control" id="res-control">Управление ресурсами</a>
-
-                        <div id="resources-list" class="res-list">
-
-
-                            <table id="resources-table">
-
-
-                            </table>
-
-                        </div>
-
-                        <datalist id="resources">
-
-                        </datalist>
-
-                    </td>
-                    <td>
-                        <button onclick="resetresource();" type="button" class="reset">X</button>
-                    </td>
-
-
-                </tr>
-                <tr>
-                    <td>Длина:</td>
-                    <td><input type="text" name="length" id="length-input" class="gen-input"></td>
-                    <td>
-                        <button onclick="resetlength();" type="button" class="reset">X</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Ревизия:</td>
-                    <td><input type="text" name="revision" id="revision-input" class="gen-input"></td>
-                    <td>
-                        <button onclick="resetrev();" type="button" class="reset">X</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Ограничения:</td>
-                    <td>
-                        <input type="checkbox" name="letters" id="letters-input" class="gen-input"><span
-                            class="cb">Буквы</span><br>
-                        <input type="checkbox" name="digits" id="digits-input" class="gen-input"><span
-                            class="cb">Цифры</span><br>
-                        <input type="checkbox" name="symbols" id="symbols-input" class="gen-input"><span class="cb">Спец. символы</span><br>
-                        <input type="checkbox" name="underscore" id="underscore-input" class="gen-input"><span
-                            class="cb">Подчёркивание</span><br>
-                    </td>
-                    <td>
-                        <button onclick="resetlimits();" type="button" class="reset">X</button>
-                    </td>
-                </tr>
-
-                <tr>
                     <td>Мастер-пароль:</td>
-                    <td><input type="password" name="master" id="master-input" class="input-master gen-input"></td>
+                    <td><input type="password" name="master" id="master-input" class="input-master"></td>
                     <td>
                         <button onclick="resetmaster();" type="button" class="reset">X</button>
                     </td>
@@ -137,6 +102,5 @@
                 </tr>
             </table>
 
-        </form>
     </div>
 {% endblock %}

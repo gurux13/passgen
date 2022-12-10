@@ -17,6 +17,8 @@ function copyResultToClipboard() {
 let all_resources = [];
 let selected_resource = undefined;
 let selected_account = undefined;
+let unsaved_account = undefined;
+let unsaved_resource = undefined;
 
 function load_resources() {
     $.ajax({
@@ -28,7 +30,7 @@ function load_resources() {
 }
 
 let last_search = undefined;
-
+const default_account_name = "По умолчанию";
 function makeNewAccount(name) {
     return {
         "id": null,
@@ -49,7 +51,7 @@ function makeNewResource(name) {
         "id": null,
         "default_account_id": null,
         "accounts": [
-            makeNewAccount("По умолчанию"),
+            makeNewAccount(default_account_name),
         ],
         "url": "https://" + name,
         "comment": "",
@@ -78,10 +80,7 @@ function searchAccounts(unlimited = false) {
         matchingDiv.append(element);
     }
     for (const match of matching) {
-        if (match.human_readable == '' || match.human_readable == null) {
-            match.human_readable = '&nbsp;';
-        }
-        const element = $.parseHTML("<div class='resource-found'>" + match.human_readable + "</div>");
+        const element = $.parseHTML("<div class='resource-found" + ((match.human_readable == null) ? " default-account" : "") +  "'>" + (match.human_readable ?? default_account_name) + "</div>");
         matchingDiv.append(element);
         if (last_height != matchingDiv.height()) {
             ++increases;
@@ -144,13 +143,16 @@ function searchResources(unlimited = false) {
     }
 }
 function reloadAccount() {
-    $("#selected-account").text(selected_account.human_readable);
+    $("#selected-account").text(selected_account.human_readable ?? default_account_name);
     const isNew = selected_account.id === null;
     if (isNew) {
         $("#selected-account-new").show();
     } else {
         $("#selected-account-new").hide();
     }
+    unsaved_account = structuredClone(selected_account);
+    setHtmlParamsFromSelection();
+    recalcUnsavedParams();
 }
 function reloadResource() {
     $("#selected-resource").text(selected_resource.name);
@@ -163,12 +165,18 @@ function reloadResource() {
     $("#resource-url").val(selected_resource.url);
     $("#resource-a").attr('href', selected_resource.url);
     $("#resource-a").text(selected_resource.url);
+    unsaved_resource = structuredClone(selected_resource);
 
 }
 
-function onAccountSelected(account, isNew) {
-    let theaccount = selected_resource.accounts.filter(a => a.human_readable === account)[0];
-
+function onAccountSelected(account, isDefault, isNew) {
+    let theaccount = undefined;
+    if (!isDefault && !isNew) {
+        theaccount = selected_resource.accounts.filter(a => a.human_readable === account)[0];
+    }
+    if (isDefault) {
+        theaccount = selected_resource.accounts.filter(a => a.human_readable == null)[0];
+    }
     if (theaccount === undefined && !isNew) {
         window.alert("WTF?!");
         return;
@@ -177,7 +185,9 @@ function onAccountSelected(account, isNew) {
         theaccount = makeNewAccount(account);
     }
     selected_account = theaccount;
-    $("#account-foldable .form-label").click();
+    if ($("#account-foldable")[0].classList.contains("unfolded")) {
+        $("#account-foldable .form-label").click();
+    }
     reloadAccount();
 }
 
@@ -191,6 +201,8 @@ function onResourceSelected(resource, isNew) {
         theresource = makeNewResource(resource);
     }
     selected_resource = theresource;
+    last_account_search = undefined;
+    selected_account = undefined;
     $("#when-resource-selected").slideUp("fast", complete = () => {
         reloadResource();
         searchAccounts();
@@ -204,7 +216,39 @@ function onResourceSelected(resource, isNew) {
     });
 }
 
+function recalcUnsavedParams() {
+    if (JSON.stringify(unsaved_resource) !== JSON.stringify(selected_resource) ||
+    JSON.stringify(unsaved_account) !== JSON.stringify(selected_account)) {
+        $("#selected-params-changed").show();
+    } else {
+        $("#selected-params-changed").hide();
+    }
+}
+
+function onParamsChangeInHtml() {
+    unsaved_account.revision = $("#revision-input").val();
+    unsaved_resource.length = parseInt($("#length-input").val());
+    unsaved_resource.letters = !!$("#letters-input").prop("checked");
+    unsaved_resource.digits = !!$("#digits-input").prop("checked");
+    unsaved_resource.symbols = !!$("#symbols-input").prop("checked");
+    unsaved_resource.underscore = !!$("#underscore-input").prop("checked");
+    recalcUnsavedParams();
+}
+
+function setHtmlParamsFromSelection() {
+
+    $("#revision-input").val(selected_account.revision);
+    $("#length-input").val(selected_resource.length);
+    $("#letters-input").prop("checked", selected_resource.letters ? "checked" : "");
+    $("#digits-input").prop("checked", selected_resource.digits ? "checked" : "");
+    $("#symbols-input").prop("checked", selected_resource.symbols ? "checked" : "");
+    $("#underscore-input").prop("checked", selected_resource.underscore ? "checked" : "");
+    recalcUnsavedParams();
+}
+
 $(function () {
+    $(".gen-input").change(() => onParamsChangeInHtml());
+    $(".gen-input").keyup(() => onParamsChangeInHtml());
     $("#resource-name").keyup(() => searchResources());
     $("#resource-name").change(() => searchResources());
     $("#account-name").keyup(() => searchAccounts());
@@ -219,11 +263,10 @@ $(function () {
     });
     $("#matching-accounts").on('click', ".resource-found", function () {
         // window.alert($(this).text());
-        onAccountSelected($(this).text(), $(this)[0].classList.contains('new-resource'));
+        onAccountSelected($(this).text(), $(this)[0].classList.contains('default-account'), $(this)[0].classList.contains('new-resource'));
     });
     $("#matching-resources-extender").click(() => {
         last_search = undefined;
-
         searchResources($("#matching-resources-extender").text() == '▼');
     });
     $(".foldable .form-label").click(function () {
