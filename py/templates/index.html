@@ -4,7 +4,7 @@
     <script src="{{ url_for('static', filename='js/sha.js') }}"></script>
     <script src="{{ url_for('static', filename='js/crypto.js') }}"></script>
     <script src="{{ url_for('static', filename='js/gen.js') }}"></script>
-
+    <script src="{{ url_for('static', filename='js/circle-progress.min.js') }}"></script>
 
     <div id="snackbar"></div>
 
@@ -70,28 +70,11 @@
                     'readOnly');" onblur="this.setAttribute(
                     'readOnly', 'readonly');">
         <input type="button" name="generate" value="Генерировать" onclick="generate_click()">
-        <div class="res" style="display:none; overflow:hidden">
-            <h2>Результат</h2>
-            <table>
-                <tr>
-                    <td>SHA1 мастер-пароля</td>
-                    <td id="master-sha" colspan="2"></td>
-                </tr>
-                <tr>
-                    <td>Результат:</td>
-                    <td class="resulting"><a class="repeatable" href="#"
-                                             onclick="copyResultToClipboard(); return false;"
-                                             id='result'></a></td>
-                </tr>
-                <tr>
-                    <td>Очистка:</td>
-                    <td><a href="#" class="repeatable" id="time-remaining"
-                           onclick="postponeCleanup(); return false"></a> <a
-                            href="#" class="repeatable" id="clean-now" onclick="cleanup(); return false;">Сейчас</a>
-                    </td>
-                </tr>
-
-            </table>
+        <div class="res" style="display:none;">
+            <span class="form-label form-label-primary" id="result-label" style="position: relative"><div class="progress"></div>Результат</span>
+            <div class="result">SHA1 мастер-пароля: <span class="result-value" id="master-sha"></span> </div>
+            <div class="result">Пароль: <a class="repeatable" href="#" onclick="copyResultToClipboard(); return false;"><span class="result-value" id="result"></span></a> </div>
+            <button onclick="cleanup()">Очистить</button>
         </div>
     </div>
 {% endblock %}

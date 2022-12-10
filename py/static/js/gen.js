@@ -21,6 +21,11 @@ let selected_account = undefined;
 let unsaved_account = undefined;
 let unsaved_resource = undefined;
 
+let last_account_search = null;
+let last_search = undefined;
+const DEFAULT_ACCOUNT_NAME = "По умолчанию";
+
+
 function onDataLoaded() {
     let resourceName = all_resources[0]?.name;
     if (userinfo.last_resource_id != null) {
@@ -41,8 +46,6 @@ function load_resources() {
     });
 }
 
-let last_search = undefined;
-const default_account_name = "По умолчанию";
 function makeNewAccount(name) {
     return {
         "id": null,
@@ -58,7 +61,7 @@ function makeNewResource(name) {
         "id": null,
         "default_account_id": null,
         "accounts": [
-            makeNewAccount(default_account_name),
+            makeNewAccount(DEFAULT_ACCOUNT_NAME),
         ],
         "url": "https://" + name,
         "comment": "",
@@ -70,15 +73,7 @@ function makeNewResource(name) {
     }
 }
 
-let last_account_search = null;
 
-function setFold(foldable, folded) {
-    const isFolded = foldable[0].classList.contains('folded');
-    if (isFolded == folded) {
-        return;
-    }
-    $(".form-label", foldable).click();
-}
 
 function searchAccounts(unlimited = false) {
     const new_text = $("#account-name").val();
@@ -100,7 +95,7 @@ function searchAccounts(unlimited = false) {
         matchingDiv.append(element);
     }
     for (const match of matching) {
-        const element = $.parseHTML("<div class='resource-found" + ((match.human_readable == null) ? " default-account" : "") +  "'>" + (match.human_readable ?? default_account_name) + "</div>");
+        const element = $.parseHTML("<div class='resource-found" + ((match.human_readable == null) ? " default-account" : "") +  "'>" + (match.human_readable ?? DEFAULT_ACCOUNT_NAME) + "</div>");
         matchingDiv.append(element);
         if (last_height != matchingDiv.height()) {
             ++increases;
@@ -163,7 +158,7 @@ function searchResources(unlimited = false) {
     }
 }
 function reloadAccount() {
-    $("#selected-account").text(selected_account.human_readable ?? default_account_name);
+    $("#selected-account").text(selected_account.human_readable ?? DEFAULT_ACCOUNT_NAME);
     const isNew = selected_account.id === null;
     if (isNew) {
         $("#selected-account-new").show();
@@ -280,7 +275,6 @@ function onParamsChangeInHtml() {
 }
 
 function setHtmlParamsFromSelection() {
-
     $("#revision-input").val(selected_account.revision);
     $("#length-input").val(selected_resource.length);
     $("#letters-input").prop("checked", selected_resource.letters ? "checked" : "");
@@ -313,20 +307,7 @@ $(function () {
         last_search = undefined;
         searchResources($("#matching-resources-extender").text() == '▼');
     });
-    $(".foldable .form-label").click(function () {
-        const parent = $(this).parent();
-        const isFolded = parent[0].classList.contains("folded");
-        if (isFolded) {
-            $("div.foldee", parent).slideDown("fast");
-            $(parent).addClass("unfolded");
-            $(parent).removeClass("folded");
-        } else {
-            $("div.foldee", parent).slideUp("fast");
-            $(parent).addClass("folded");
-            $(parent).removeClass("unfolded");
-        }
 
-    });
     $("#resource-url").on('keypress', function (ev) {
         if (ev.key === "Enter") {
             $("#url-edit").click();
@@ -347,6 +328,9 @@ $(function () {
             $("#resource-a").show();
             $("#resource-url").hide();
         }
+    });
+    $("#result-label").click(() => {
+        postponeCleanup();
     });
     load_resources();
 });
@@ -418,24 +402,30 @@ function cleanup() {
     update();
 
 }
-
+let cleanupScheduledAt = undefined;
 function cleanupTick() {
-    --remaining;
+    remaining = 60000 - (new Date().getTime() - cleanupScheduledAt) ;
     if (remaining <= 0) {
         cleanup();
     } else {
-        $("#time-remaining").html(remaining + "s");
-
+        // $("#time-remaining").html(remaining + "s");
+        $(".progress").css("right", (100 - remaining / 60000.0 * 100) + "%");
+        // progress.value = remaining;
     }
 }
-
+let progress = undefined;
 function enqueueCleanup() {
+    // progress = new CircleProgress('.progress', {
+    //     max: 60,
+    //     value: 60,
+    //     textFormat: 'value',
+    // });
     if (resetTimeout) {
         window.clearTimeout(resetTimeout);
     }
-    remaining = 61;
+    cleanupScheduledAt = new Date().getTime();
     cleanupTick();
-    resetTimeout = window.setInterval(cleanupTick, 1000);
+    resetTimeout = window.setInterval(cleanupTick, 100);
 }
 
 function postponeCleanup() {

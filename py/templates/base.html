@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
-    <script src="/static/js/base.js"></script>
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/foldable.js') }}"></script>
+
     <style>
         html, body, h1, h2, h3, h4, h5, h6 {
             font-family: "Roboto", sans-serif;
@@ -44,7 +46,8 @@
        class="w3-right w3-xlarge w3-padding-large w3-hover-black w3-hide-large" title="Close Menu">
         <i class="fa fa-remove"></i>
     </a>
-    <a href="{{ url_for('passgen.index') }}" class="w3-bar-item w3-button w3-hover-black a-nav menu-item">Генератор паролей</a>
+    <a href="{{ url_for('passgen.index') }}" class="w3-bar-item w3-button w3-hover-black a-nav menu-item">Генератор
+        паролей</a>
     {% if g.user %}
         <a href="{{ url_for('passgen.resources') }}" class="w3-bar-item w3-button w3-hover-black a-nav menu-item">Ресурсы</a>
     {% endif %}
@@ -80,9 +83,9 @@
         {#      <h4>Footer</h4>#}
         {#    </div>#}
 
-{#        <div class="w3-container w3-theme-l1" style="position: fixed; bottom: 0px; width: 100%">#}
-{#            <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>#}
-{#        </div>#}
+        {#        <div class="w3-container w3-theme-l1" style="position: fixed; bottom: 0px; width: 100%">#}
+        {#            <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>#}
+        {#        </div>#}
     </footer>
 
     <!-- END MAIN -->
