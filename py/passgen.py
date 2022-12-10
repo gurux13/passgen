@@ -11,6 +11,7 @@ from db_models.user import User
 from db_models.variant import Resource, ResourceAccount
 from globals import db, app
 from models.ui_variant import ResourceModel, ResourceAccountModel
+from models.userinfo import UserInfoModel
 from wrappers import db_view
 
 bp = Blueprint('passgen', __name__)
@@ -37,12 +38,18 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 @db_view
 @login_required
 def batchresources():
+    user = db.session.query(User).filter_by(id=g.user.id)[0]
+    userinfo = UserInfoModel(
+        g.user.id,
+        user.lastresource_id,
+        user.lasthash
+    )
     all_resources = db.session.query(Resource).filter_by(login_id=g.user.id)
     all_resources_model = map(
         lambda db:
             ResourceModel(
                 db.id,
-                db.default_account_id,
+                db.last_account_id,
                 [ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.revision) for x in db.accounts],
                 db.name,
                 db.url,
@@ -54,7 +61,7 @@ def batchresources():
                 db.underscore,
             ), all_resources)
     response = app.response_class(
-        response=json.dumps(list(all_resources_model), cls=EnhancedJSONEncoder),
+        response=json.dumps({'resources': list(all_resources_model), 'userinfo': userinfo}, cls=EnhancedJSONEncoder),
         status=200,
         mimetype='application/json'
     )

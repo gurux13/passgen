@@ -8,10 +8,10 @@
 # EXECUTE stmt;
 # DEALLOCATE PREPARE stmt;
 # SET FOREIGN_KEY_CHECKS = 1;
-
-
+#
+#
 # $env:MYSQL_USER='passgen'
-# $env:MYSQL_PASSWORD=''
+# $env:MYSQL_PASSWORD='SgfWIaia'
 # $env:FLASK_KEY='blah'
 # rm -r .\migrations\; flask db init; flask db migrate; flask db upgrade
 

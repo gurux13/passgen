@@ -141,6 +141,7 @@ span.form-label-primary {
 .selected-value {
   font-family: monospace;
   font-weight: bold;
+  color: darkgreen;
 }
 span.form-label {
   display: block;

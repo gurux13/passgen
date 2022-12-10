@@ -16,8 +16,8 @@ class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     login_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     login = db.relation('User', foreign_keys=login_id)
-    default_account_id = db.Column(db.Integer, db.ForeignKey('resource_account.id'))
-    default_account = db.relation('ResourceAccount', foreign_keys=default_account_id)
+    last_account_id = db.Column(db.Integer, db.ForeignKey('resource_account.id'))
+    last_account = db.relation('ResourceAccount', foreign_keys=last_account_id)
 
     name = db.Column(db.String(256))
     url = db.Column(db.String(256))

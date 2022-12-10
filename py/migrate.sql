@@ -15,7 +15,7 @@ VALUES
 
 INSERT INTO `passgen_py`.`resource`
 (`login_id`,
-`default_account_id`,
+`last_account_id`,
 `name`,
 `url`,
 `comment`,
@@ -30,7 +30,7 @@ SELECT
     `variants`.`resource`,
     `variants`.`resource`,
     '',
-        `variants`.`length`,
+    `variants`.`length`,
     `variants`.`letters`,
     `variants`.`digits`,
     `variants`.`symbols`,

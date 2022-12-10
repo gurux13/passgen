@@ -12,7 +12,7 @@ class ResourceAccountModel:
 @dataclass
 class ResourceModel:
     id: int
-    default_account_id: int
+    last_account_id: int
     accounts: List[ResourceAccountModel]
     name: str
     url: str

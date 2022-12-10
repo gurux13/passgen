@@ -8,4 +8,4 @@ class User(db.Model):
     lastlogin = db.Column(db.TIMESTAMP)
     passhash = db.Column(db.String(128))
     lastresource_id = db.Column(db.Integer, db.ForeignKey('resource.id', use_alter=True))
-    lasthash = db.Column(db.Integer)
+    lasthash = db.Column(db.String(32))
