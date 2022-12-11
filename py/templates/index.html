@@ -4,7 +4,6 @@
     <script src="{{ url_for('static', filename='js/sha.js') }}"></script>
     <script src="{{ url_for('static', filename='js/crypto.js') }}"></script>
     <script src="{{ url_for('static', filename='js/gen.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/circle-progress.min.js') }}"></script>
 
     <div id="snackbar"></div>
 
@@ -15,7 +14,7 @@
                                                                            class="selected-value-new"> (новый)</span></span>
         <div class="resource-finder foldee">
             <input type="text" id="resource-name" autocomplete="off" readonly
-                onclick="this.removeAttribute(
+                   onclick="this.removeAttribute(
                     'readOnly');">
             <div id="matching-resources" class="matching-values"></div>
             <div id="matching-resources-extender" class="matching-extender">▼</div>
@@ -42,8 +41,6 @@
         </div>
 
 
-
-
         <div class="foldable unfolded" id="params-foldable">
             <span class="form-label form-label-primary"><span
                     class="folded-icon">▼</span>Параметры <span
@@ -66,14 +63,23 @@
         </div>
         <span class="form-label-secondary form-label">Мастер-пароль</span>
         <input type="password" name="master" id="master-input" class="input-master" autocomplete="new-password" readonly
-                onclick="this.removeAttribute(
+               onclick="this.removeAttribute(
                     'readOnly');" onblur="this.setAttribute(
                     'readOnly', 'readonly');">
         <input type="button" name="generate" value="Генерировать" onclick="generate_click()">
         <div class="res" style="display:none;">
-            <span class="form-label form-label-primary" id="result-label" style="position: relative"><div class="progress"></div>Результат</span>
-            <div class="result">SHA1 мастер-пароля: <span class="result-value" id="master-sha"></span> </div>
-            <div class="result">Пароль: <a class="repeatable" href="#" onclick="copyResultToClipboard(); return false;"><span class="result-value" id="result"></span></a> </div>
+            <span class="form-label form-label-primary" id="result-label" style="position: relative"><div
+                    class="progress"></div>Результат</span>
+            <span class="form-label form-label-secondary">Хеш мастер-пароля</span>
+            <div class="result"><span class="result-value" id="master-sha"></span></div>
+            <span class="form-label form-label-secondary">Пароль</span>
+
+            <div class="pwd">
+                <a class="repeatable" href="#" onclick="copyResultToClipboard(); return false;"><span class="result-value" id="result"></span></a>
+                <button onclick="copyResultToClipboard()">📋</button>
+                <button onclick="revealPassword()">👁</button>
+                <button onclick="cleanup()"></button>
+            </div>
             <button onclick="cleanup()">Очистить</button>
         </div>
     </div>

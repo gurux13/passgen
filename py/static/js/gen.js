@@ -8,11 +8,7 @@ function copyToClipboard(text) {
     document.body.removeChild(input);
 }
 
-function copyResultToClipboard() {
-    copyToClipboard(document.getElementById('result').innerText);
-    snackbar("Скопировано в буфер обмена");
-    return false;
-}
+
 
 let all_resources = [];
 let userinfo = undefined;
@@ -386,6 +382,7 @@ function resetlimits() {
 
 function resetall() {
     $("div.res").slideUp(300);
+    $("#result").prop('data-pwd', '').text('');
     $("button.reset").click();
     stopCleanup();
 }
@@ -425,7 +422,7 @@ function enqueueCleanup() {
     }
     cleanupScheduledAt = new Date().getTime();
     cleanupTick();
-    resetTimeout = window.setInterval(cleanupTick, 100);
+    resetTimeout = window.setInterval(cleanupTick, 10);
 }
 
 function postponeCleanup() {
@@ -435,6 +432,15 @@ function postponeCleanup() {
     }
 }
 
+function copyResultToClipboard() {
+    copyToClipboard($('#result').prop('data-pwd'));
+    snackbar("Скопировано в буфер обмена");
+    return false;
+}
+
+function revealPassword() {
+    $("#result").text($("#result").prop('data-pwd'));
+}
 
 function generate_click() {
     enqueueCleanup();
@@ -448,7 +454,8 @@ function generate_click() {
     underscore = $("#underscore-input").prop("checked") ? true : false;
     master = $("#master-input").val();
     pass = generate(resource, length, revision, master, letters, digits, symbols, underscore);
-    $("#result").text(pass);
+    $("#result").text(pass.replaceAll(/./g, '*'));
+    $("#result").prop('data-pwd', pass);
     $("#master-sha").text(sha1hex(master).substr(0, 4).toUpperCase());
     $("div.res").slideDown(300);
     $.ajax("remote.php", {

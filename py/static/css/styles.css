@@ -204,3 +204,15 @@ span.form-label-secondary {
   background: rgba(90, 200, 100, 0.9);
   z-index: -1 ;
 }
+
+.result-value {
+  font-family: monospace;
+}
+.result {
+  font-size: large;
+}
+.pwd {
+  font-size: x-large;
+  font-family: monospace;
+  color: darkgreen;
+}
