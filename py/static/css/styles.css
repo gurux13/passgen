@@ -216,3 +216,11 @@ span.form-label-secondary {
   font-family: monospace;
   color: darkgreen;
 }
+
+.sha-correct {
+  background-color: lightgreen;
+}
+
+.sha-incorrect {
+  background-color: lightcoral;
+}

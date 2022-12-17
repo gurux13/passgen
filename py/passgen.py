@@ -50,7 +50,7 @@ def batchresources():
             ResourceModel(
                 db.id,
                 db.last_account_id,
-                [ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.revision) for x in db.accounts],
+                [ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.revision, x.lasthash) for x in db.accounts],
                 db.name,
                 db.url,
                 db.comment,

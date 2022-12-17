@@ -7,10 +7,10 @@
     <link rel="stylesheet" href="/static/css/w3.css">
     <link rel="stylesheet" href="/static/css/styles.css">
 
-    <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='ext/w3-theme-black.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ext/font.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ext/font-awesome.min.css') }}">
+    <script src="{{ url_for('static', filename='ext/jquery-3.6.0.js') }}"></script>
     <script src="{{ url_for('static', filename='js/base.js') }}"></script>
     <script src="{{ url_for('static', filename='js/foldable.js') }}"></script>
 

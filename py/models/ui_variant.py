@@ -8,6 +8,7 @@ class ResourceAccountModel:
     pass_part: str
     human_readable: str
     revision: str
+    last_hash: str
 
 @dataclass
 class ResourceModel:

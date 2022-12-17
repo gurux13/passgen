@@ -1,7 +1,8 @@
-truncate table `passgen_py`.`user`;
-truncate table passgen_py.resource_account ;
+SET FOREIGN_KEY_CHECKS = 0;
+truncate table passgen_py.resource_account;
 truncate table `passgen_py`.resource;
-
+truncate table `passgen_py`.`user`;
+SET FOREIGN_KEY_CHECKS = 1;
 INSERT INTO `passgen_py`.`user`
 (`id`,
 `login`,
@@ -51,4 +52,4 @@ SELECT
 
     `variants`.`revision`
 FROM `passgen`.`variants`, passgen_py.resource
-where variants.resource = resource.name;
+where variants.resource = resource.name and variants.login_id = resource.login_id;

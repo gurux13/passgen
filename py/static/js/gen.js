@@ -9,7 +9,6 @@ function copyToClipboard(text) {
 }
 
 
-
 let all_resources = [];
 let userinfo = undefined;
 let selected_resource = undefined;
@@ -70,7 +69,6 @@ function makeNewResource(name) {
 }
 
 
-
 function searchAccounts(unlimited = false) {
     const new_text = $("#account-name").val();
     if (new_text == last_account_search && !unlimited) {
@@ -91,7 +89,7 @@ function searchAccounts(unlimited = false) {
         matchingDiv.append(element);
     }
     for (const match of matching) {
-        const element = $.parseHTML("<div class='resource-found" + ((match.human_readable == null) ? " default-account" : "") +  "'>" + (match.human_readable ?? DEFAULT_ACCOUNT_NAME) + "</div>");
+        const element = $.parseHTML("<div class='resource-found" + ((match.human_readable == null) ? " default-account" : "") + "'>" + (match.human_readable ?? DEFAULT_ACCOUNT_NAME) + "</div>");
         matchingDiv.append(element);
         if (last_height != matchingDiv.height()) {
             ++increases;
@@ -153,6 +151,7 @@ function searchResources(unlimited = false) {
         }
     }
 }
+
 function reloadAccount() {
     $("#selected-account").text(selected_account.human_readable ?? DEFAULT_ACCOUNT_NAME);
     const isNew = selected_account.id === null;
@@ -167,6 +166,7 @@ function reloadAccount() {
     setHtmlParamsFromSelection();
     recalcUnsavedParams();
 }
+
 function reloadResource() {
     $("#selected-resource").text(selected_resource.name);
     const isNew = selected_resource.id === null;
@@ -207,8 +207,7 @@ function onAccountSelected(account, isDefault, isNew) {
 function selectDefaultAccount() {
     if (selected_resource.accounts.length == 1) {
         $("#matching-accounts .resource-found").click();
-    }
-    else {
+    } else {
         const account = selected_resource.accounts.filter(x => x.id == selected_resource.default_account_id)[0];
         if (account != null) {
             onAccountSelected(account.human_readable, account.human_readable == null, false);
@@ -241,7 +240,7 @@ function onResourceSelected(resource, isNew) {
 
 function recalcUnsavedParams() {
     if (JSON.stringify(unsaved_resource) !== JSON.stringify(selected_resource) ||
-    JSON.stringify(unsaved_account) !== JSON.stringify(selected_account)) {
+        JSON.stringify(unsaved_account) !== JSON.stringify(selected_account)) {
         $("#selected-params-changed").show();
     } else {
         $("#selected-params-changed").hide();
@@ -399,9 +398,11 @@ function cleanup() {
     update();
 
 }
+
 let cleanupScheduledAt = undefined;
+
 function cleanupTick() {
-    remaining = 60000 - (new Date().getTime() - cleanupScheduledAt) ;
+    remaining = 60000 - (new Date().getTime() - cleanupScheduledAt);
     if (remaining <= 0) {
         cleanup();
     } else {
@@ -410,7 +411,9 @@ function cleanupTick() {
         // progress.value = remaining;
     }
 }
+
 let progress = undefined;
+
 function enqueueCleanup() {
     // progress = new CircleProgress('.progress', {
     //     max: 60,
@@ -456,7 +459,16 @@ function generate_click() {
     pass = generate(resource, length, revision, master, letters, digits, symbols, underscore);
     $("#result").text(pass.replaceAll(/./g, '*'));
     $("#result").prop('data-pwd', pass);
-    $("#master-sha").text(sha1hex(master).substr(0, 4).toUpperCase());
+    const theSha = sha1hex(master).substr(0, 4).toUpperCase();
+    $("#master-sha").text(theSha);
+    const expected_sha = selected_account.last_hash ?? userinfo.last_hash;
+    if (expected_sha === theSha) {
+        $("#master-sha").addClass("sha-correct");
+        $("#master-sha").removeClass("sha-incorrect");
+    } else {
+        $("#master-sha").addClass("sha-incorrect");
+        $("#master-sha").removeClass("sha-correct");
+    }
     $("div.res").slideDown(300);
     $.ajax("remote.php", {
         method: "post",

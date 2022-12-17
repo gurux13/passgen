@@ -10,6 +10,7 @@ class ResourceAccount(db.Model):
     pass_part = db.Column(db.String(128))
     human_readable = db.Column(db.String(256))
     revision = db.Column(db.String(256))
+    lasthash = db.Column(db.String(32))
 
 class Resource(db.Model):
     __tablename__ = 'resource'
