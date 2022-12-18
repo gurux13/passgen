@@ -62,7 +62,7 @@
             </div>
         </div>
         <span class="form-label-secondary form-label">Мастер-пароль</span>
-        <input type="password" name="master" id="master-input" class="input-master" autocomplete="new-password" readonly
+        <input type="password" name="master" id="master-input" class="input-master gen-input" autocomplete="new-password" readonly
                onclick="this.removeAttribute(
                     'readOnly');" onblur="this.setAttribute(
                     'readOnly', 'readonly');">
@@ -71,7 +71,7 @@
             <span class="form-label form-label-primary" id="result-label" style="position: relative"><div
                     class="progress"></div>Результат</span>
             <span class="form-label form-label-secondary">Хеш мастер-пароля</span>
-            <div class="result" id="master-sha-div"><span class="result-value" id="master-sha"></span><span id="sha-status"></span></div>
+            <div class="result" id="master-sha-div"><span class="result-value" id="master-sha"></span><span id="when-sha-error"><button class="gen-action" id="save-global-sha">💾</button> <button class="gen-action" id="save-sha-more">...</button> <button class="gen-action" id="save-local-sha">💾 ➔ аккаунт</button></span></div>
             <span class="form-label form-label-secondary">Пароль</span>
 
             <div class="pwd">

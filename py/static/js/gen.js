@@ -25,10 +25,22 @@ function onDataLoaded() {
     let resourceName = all_resources[0]?.name;
     if (userinfo.last_resource_id != null) {
         resourceName = all_resources.filter(x => x.id == userinfo.last_resource_id)[0]?.name;
-
     }
     $("#resource-name").val(resourceName ?? "");
+    last_search = undefined;
     searchResources();
+    if (unsaved_resource?.id) {
+        selected_resource = all_resources.filter(x => x.id == unsaved_resource.id)[0];
+        if (selected_resource) {
+            reloadResource();
+        }
+    }
+    if (unsaved_account?.id && selected_resource) {
+        selected_account = selected_resource.accounts.filter(x => x.id == unsaved_account.id)[0];
+        if (selected_account) {
+            reloadAccount();
+        }
+    }
 }
 
 function processData(data) {
@@ -209,6 +221,7 @@ function onAccountSelected(account, isDefault, isNew) {
         $("#account-foldable .form-label").click();
     }
     reloadAccount();
+    onSelectionChanged();
 }
 
 function selectDefaultAccount() {
@@ -219,6 +232,12 @@ function selectDefaultAccount() {
         if (account != null) {
             onAccountSelected(account.human_readable, account.human_readable == null, false);
         }
+    }
+}
+
+function onSelectionChanged() {
+    if ($("#result").prop('data-pwd')) {
+        generate_click();
     }
 }
 
@@ -242,6 +261,8 @@ function onResourceSelected(resource, isNew) {
         $("#resource-foldable .form-label").click();
         $("#resource-a").show();
         $("#resource-url").hide();
+
+        onSelectionChanged();
     });
 }
 
@@ -337,6 +358,21 @@ $(function () {
     $("#result-label").click(() => {
         postponeCleanup();
     });
+    $("#save-sha-more").click(() => {
+        $("#save-local-sha").animate({width: 'toggle'}, 350);
+    });
+    $("#save-global-sha").click(() => {
+        saveSha(true);
+    });
+    $("#save-local-sha").click(() => {
+        saveSha(false);
+    });
+    $(".gen-input").keypress(function (event){
+		postponeCleanup();
+		if (event.charCode == 13) {
+			generate_click();
+		}
+	});
     load_resources();
 });
 
@@ -393,6 +429,7 @@ function resetall() {
     $("div.res").slideUp(300);
     $("#result").prop('data-pwd', '').text('');
     $("button.reset").click();
+    resetmaster();
     stopCleanup();
 }
 
@@ -403,10 +440,8 @@ function stopCleanup() {
     resetTimeout = null;
 }
 
-function cleanup() {
+function cleanup(keep) {
     resetall();
-    update();
-
 }
 
 let cleanupScheduledAt = undefined;
@@ -455,6 +490,32 @@ function revealPassword() {
     $("#result").text($("#result").prop('data-pwd'));
 }
 
+async function saveSha(isGlobal) {
+    const theSha = $("#master-sha").text();
+    if (!theSha) {
+        return;
+    }
+    if (unsaved_resource.id == null || unsaved_account.id == null) {
+        return;
+    }
+    return $.ajax("newsha", {
+        method: "post",
+        data: JSON.stringify({
+            resource_id: unsaved_resource.id,
+            account_id: unsaved_account.id,
+            sha: theSha,
+            global: isGlobal,
+        }),
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        success: (data) => {
+            processData(data);
+            setShaColors();
+        },
+        async: true,
+    });
+}
+
 async function withLoader(func) {
     $("#loader").show();
     await func();
@@ -465,6 +526,18 @@ async function withSaveLoader(func) {
     $("#saving-wait").slideDown();
     await func();
     $("#saving-wait").slideUp();
+}
+
+function setShaColors() {
+    const theSha = $("#master-sha").text();
+    const expected_sha = selected_account.last_hash ?? userinfo.last_hash;
+    if (expected_sha === theSha) {
+        $("#master-sha").addClass("sha-correct");
+        $("#master-sha").removeClass("sha-incorrect");
+    } else {
+        $("#master-sha").addClass("sha-incorrect");
+        $("#master-sha").removeClass("sha-correct");
+    }
 }
 
 async function generate_click() {
@@ -484,14 +557,8 @@ async function generate_click() {
     $("#result").prop('data-pwd', pass);
     const theSha = sha1hex(master).substr(0, 4).toUpperCase();
     $("#master-sha").text(theSha);
-    const expected_sha = selected_account.last_hash ?? userinfo.last_hash;
-    if (expected_sha === theSha) {
-        $("#master-sha").addClass("sha-correct");
-        $("#master-sha").removeClass("sha-incorrect");
-    } else {
-        $("#master-sha").addClass("sha-incorrect");
-        $("#master-sha").removeClass("sha-correct");
-    }
+    setShaColors();
+    $("#save-local-sha").hide();
     $("div.res").slideDown(300);
     await withSaveLoader(() => {
         return $.ajax("generated", {
