@@ -31,13 +31,20 @@ function onDataLoaded() {
     searchResources();
 }
 
+function processData(data) {
+    if (!data.resources || !data.userinfo) {
+        window.alert("Bad data received!");
+        return;
+    }
+    all_resources = data.resources;
+    userinfo = data.userinfo;
+    onDataLoaded();
+
+}
+
 function load_resources() {
     $.ajax({
-        url: 'batchresources', success: (data) => {
-            all_resources = data.resources;
-            userinfo = data.userinfo;
-            onDataLoaded();
-        }
+        url: 'batchresources', success: processData
     });
 }
 
@@ -179,7 +186,7 @@ function reloadResource() {
     $("#resource-a").attr('href', selected_resource.url);
     $("#resource-a").text(selected_resource.url);
     unsaved_resource = structuredClone(selected_resource);
-
+    unsaved_resource.accounts = undefined;
 }
 
 function onAccountSelected(account, isDefault, isNew) {
@@ -238,25 +245,28 @@ function onResourceSelected(resource, isNew) {
     });
 }
 
-function recalcUnsavedParams() {
-    if (JSON.stringify(unsaved_resource) !== JSON.stringify(selected_resource) ||
-        JSON.stringify(unsaved_account) !== JSON.stringify(selected_account)) {
-        $("#selected-params-changed").show();
-    } else {
-        $("#selected-params-changed").hide();
-    }
-    const revision = $("#revision-input").val();
-    const length = parseInt($("#length-input").val());
-    const letters = !!$("#letters-input").prop("checked") ? 'A' : '';
-    const digits = !!$("#digits-input").prop("checked") ? '0' : '';
-    const symbols = !!$("#symbols-input").prop("checked") ? '@' : '';
-    const underscore = !!$("#underscore-input").prop("checked") ? '_' : '';
+function getParamString(resource, account) {
+    const revision = account.revision;
+    const length = resource.length;
+    const letters = resource.letters ? 'A' : '';
+    const digits = resource.digits ? '0' : '';
+    const symbols = resource.symbols ? '@' : '';
+    const underscore = resource.underscore ? '_' : '';
     let allowed = letters + digits + symbols + underscore;
     if (allowed.length == 0) {
         allowed = '????';
     }
     const paramString = '|' + length + '| #' + revision + ' ' + allowed;
-    $("#selected-params").text(paramString);
+    return paramString;
+}
+
+function recalcUnsavedParams() {
+    if (getParamString(selected_resource, selected_account) !== getParamString(unsaved_resource, unsaved_account)) {
+        $("#selected-params-changed").show();
+    } else {
+        $("#selected-params-changed").hide();
+    }
+    $("#selected-params").text(getParamString(unsaved_resource, unsaved_account));
 }
 
 function onParamsChangeInHtml() {
@@ -445,16 +455,29 @@ function revealPassword() {
     $("#result").text($("#result").prop('data-pwd'));
 }
 
-function generate_click() {
-    enqueueCleanup();
-    resource = $("#resource-input").val();
-    length = $("#length-input").val();
-    revision = $("#revision-input").val();
+async function withLoader(func) {
+    $("#loader").show();
+    await func();
+    $("#loader").hide();
+}
 
-    letters = $("#letters-input").prop("checked") ? true : false;
-    digits = $("#digits-input").prop("checked") ? true : false;
-    symbols = $("#symbols-input").prop("checked") ? true : false;
-    underscore = $("#underscore-input").prop("checked") ? true : false;
+async function withSaveLoader(func) {
+    $("#saving-wait").slideDown();
+    await func();
+    $("#saving-wait").slideUp();
+}
+
+async function generate_click() {
+    enqueueCleanup();
+    resource = unsaved_resource.name;
+    length = unsaved_resource.length;
+    revision = unsaved_account.revision;
+
+    letters = unsaved_resource.letters;
+    digits = unsaved_resource.digits;
+    symbols = unsaved_resource.symbols;
+    underscore = unsaved_resource.underscore;
+
     master = $("#master-input").val();
     pass = generate(resource, length, revision, master, letters, digits, symbols, underscore);
     $("#result").text(pass.replaceAll(/./g, '*'));
@@ -470,20 +493,18 @@ function generate_click() {
         $("#master-sha").removeClass("sha-correct");
     }
     $("div.res").slideDown(300);
-    $.ajax("remote.php", {
-        method: "post",
-        data: {
-            resource: resource,
-            length: length,
-            revision: revision,
-            letters: letters,
-            digits: digits,
-            symbols: symbols,
-            underscore: underscore
-        },
-        complete: function () {
-            update();
-        }
+    await withSaveLoader(() => {
+        return $.ajax("generated", {
+            method: "post",
+            data: JSON.stringify({
+                resource: unsaved_resource,
+                account: unsaved_account,
+            }),
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            success: processData,
+            async: true,
+        });
     });
 
 }
@@ -493,65 +514,6 @@ known_resources = new Array();
 function closeResList() {
     $("#resources-list").hide();
     $("#cover").hide();
-}
-
-function update() {
-    $.ajax("remote.php?all=1", {
-        complete: function (data) {
-            text = data.responseText;
-            obj = JSON.parse(text);
-            if (obj.Status == "OK") {
-                $("#resources").html("");
-                $("#resources-table").html("");
-
-                for (var i = 0; i < obj.all.length; i++) {
-                    item = obj.all[i];
-                    known_resources[item.resource] = item;
-
-                    $("#resources").append("<option value='" + item.resource + "'>");
-                    $("#resources-table").append("<tr><td><a href='#' class='res'>" + item.resource + "</a></td><td><button type='button' class='rm-resource'>X</button></td></tr>");
-                }
-                $("a.res").click(function () {
-                    $("#resource-input").val($(this).text());
-                    $("#resource-input").trigger("input");
-                    closeResList();
-                });
-                $(".rm-resource").click(function () {
-                    resource = $("a", $(this).parent().parent()).text();
-                    $.ajax("remote.php",
-                        {
-                            method: "post",
-                            data: {
-                                resource: resource,
-                                rm: true
-                            },
-                            complete: function () {
-                                update();
-                            }
-                        }
-                    );
-                });
-
-                if ((obj.resource) !== undefined)
-                    setfields(obj, true);
-            }
-
-
-        }
-    });
-}
-
-function setfields(variant, change_resource) {
-    if (change_resource)
-        $("#resource-input").val(variant.resource);
-    $("#length-input").val(variant.length);
-    $("#revision-input").val(variant.revision);
-
-    $("#letters-input").prop("checked", variant.letters ? "checked" : "");
-    $("#digits-input").prop("checked", variant.digits ? "checked" : "");
-    $("#symbols-input").prop("checked", variant.symbols ? "checked" : "");
-    $("#underscore-input").prop("checked", variant.underscore ? "checked" : "");
-
 }
 
 let resetTimeout = null;
@@ -578,10 +540,10 @@ $(document).ready(function () {
     $("#cover").click(function () {
         closeResList();
     });
-    $(".gen-input").keypress(function (event) {
+    $(".gen-input").keypress(async function (event) {
         postponeCleanup();
         if (event.charCode == 13) {
-            generate_click();
+            await generate_click();
         }
     });
     $(".gen-input").change(function () {

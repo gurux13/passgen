@@ -71,16 +71,16 @@
             <span class="form-label form-label-primary" id="result-label" style="position: relative"><div
                     class="progress"></div>Результат</span>
             <span class="form-label form-label-secondary">Хеш мастер-пароля</span>
-            <div class="result"><span class="result-value" id="master-sha"></span><span id="sha-status"></span></div>
+            <div class="result" id="master-sha-div"><span class="result-value" id="master-sha"></span><span id="sha-status"></span></div>
             <span class="form-label form-label-secondary">Пароль</span>
 
             <div class="pwd">
                 <a class="repeatable" href="#" onclick="copyResultToClipboard(); return false;"><span class="result-value" id="result"></span></a>
-                <button onclick="copyResultToClipboard()">📋</button>
-                <button onclick="revealPassword()">👁</button>
-                <button onclick="cleanup()"></button>
+                <button class="gen-action" onclick="copyResultToClipboard()">📋</button>
+                <button class="gen-action" onclick="revealPassword()">👁</button>
+                <button class="gen-action" onclick="cleanup()">⌫</button>
             </div>
-            <button onclick="cleanup()">Очистить</button>
+            <div id="saving-wait"><img src="{{ url_for("static", filename="img/pass-loader.gif") }}">Сохранение</div>
         </div>
     </div>
 {% endblock %}

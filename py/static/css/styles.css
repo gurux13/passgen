@@ -1,42 +1,43 @@
 .current-link {
     background-color: #ee6002;
 }
+
 .current-link:hover {
     /*background-color: teal!important;*/
 }
 
 /* Style inputs with type="text", select elements and textareas */
 input[type=text], input[type=password], select, textarea {
-  width: 100%; /* Full width */
-  padding: 6px; /* Some padding */
-  border: 1px solid #ccc; /* Gray border */
-  border-radius: 4px; /* Rounded borders */
-  box-sizing: border-box; /* Make sure that padding and width stays in place */
-  margin-top: 6px; /* Add a top margin */
-  margin-bottom: 6px; /* Bottom margin */
-  resize: vertical /* Allow the user to vertically resize the textarea (not horizontally) */
+    width: 100%; /* Full width */
+    padding: 6px; /* Some padding */
+    border: 1px solid #ccc; /* Gray border */
+    border-radius: 4px; /* Rounded borders */
+    box-sizing: border-box; /* Make sure that padding and width stays in place */
+    margin-top: 6px; /* Add a top margin */
+    margin-bottom: 6px; /* Bottom margin */
+    resize: vertical /* Allow the user to vertically resize the textarea (not horizontally) */
 }
 
 /* Style the submit button with a specific background color etc */
 input[type=submit] {
-  background-color: #04AA6D;
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+    background-color: #04AA6D;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 /* When moving the mouse over the submit button, add a darker green color */
 input[type=submit]:hover {
-  background-color: #45a049;
+    background-color: #45a049;
 }
 
 /* Add a background color and some padding around the form */
 .form-container {
-  border-radius: 5px;
-  background-color: #f2f2f2;
-  padding: 20px;
+    border-radius: 5px;
+    background-color: #f2f2f2;
+    padding: 20px;
 }
 
 .narrow-form {
@@ -44,135 +45,150 @@ input[type=submit]:hover {
 }
 
 .below {
-  position: absolute;
-  width: 100%;
-  bottom: 0px;
-  text-align: center;
-  margin-bottom: 5px;
+    position: absolute;
+    width: 100%;
+    bottom: 0px;
+    text-align: center;
+    margin-bottom: 5px;
 }
+
 .below .username {
-  font-family: monospace;
-  font-weight: bold;
+    font-family: monospace;
+    font-weight: bold;
 }
 
 .matching-values {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
 }
+
 .resource-finder {
     border: 1px solid #ddd;
 }
+
 .resource-finder input {
-  margin: 0;
-  border-radius: 0;
+    margin: 0;
+    border-radius: 0;
 }
+
 .resource-found {
-  flex: 1;
-  margin: 6px;
-  padding: 4px;
-  white-space: nowrap;
-  border: 1px solid #ccc;
-  text-align: center;
-  border-radius: 6px;
-  background-color: #eee;
-  display: inline;
-  width: fit-content;
-  cursor: pointer;
+    flex: 1;
+    margin: 6px;
+    padding: 4px;
+    white-space: nowrap;
+    border: 1px solid #ccc;
+    text-align: center;
+    border-radius: 6px;
+    background-color: #eee;
+    display: inline;
+    width: fit-content;
+    cursor: pointer;
 }
+
 .selected-value-new {
-  display: none;
-  color: darkred;
+    display: none;
+    color: darkred;
 }
+
 .new-resource {
-  background-color: #ffe !important;
+    background-color: #ffe !important;
 }
+
 .new-resource-label {
-  padding-right: 0.5em;
+    padding-right: 0.5em;
 }
+
 .matching-extender {
     display: none;
-  background-color: #ddd;
-  text-align: center;
-  width: 100%;
-  padding-top: 0px;
-  margin-top: 0px;
+    background-color: #ddd;
+    text-align: center;
+    width: 100%;
+    padding-top: 0px;
+    margin-top: 0px;
 }
 
 #resource-url-div {
-  width: 100%;
-  padding-top: 10px;
+    width: 100%;
+    padding-top: 10px;
 }
 
 .selected-value-changed {
-  color: darkred;
-  margin-left: 1em;
+    color: darkred;
+    margin-left: 1em;
 }
 
 span.form-label-first {
-  margin-top: 0px !important;
+    margin-top: 0px !important;
 }
+
 span.form-label-primary {
-  background: rgba(96,2,238,0.09);
-  /*background: linear-gradient(90deg,  rgba(96,2,238,0.05) 0%, rgba(96,2,238,0.2) 100%);*/
-  font-size: large;
+    background: rgba(96, 2, 238, 0.09);
+    /*background: linear-gradient(90deg,  rgba(96,2,238,0.05) 0%, rgba(96,2,238,0.2) 100%);*/
+    font-size: large;
 }
+
 .selected-object {
-  background: #eeffff;
-  padding: 0.3em 1em;
-  font-weight: bold;
-  font-size: large;
+    background: #eeffff;
+    padding: 0.3em 1em;
+    font-weight: bold;
+    font-size: large;
 }
+
 .foldable .form-label {
-  cursor: pointer;
+    cursor: pointer;
 }
+
 .folded-icon {
-  width: 1em;
-  display: inline-block;
+    width: 1em;
+    display: inline-block;
 }
+
 .unfolded .folded-icon {
 
 }
+
 .folded .folded-icon {
-  transform: rotate(270deg);
+    transform: rotate(270deg);
 
 }
 
 .selected-value {
-  font-family: monospace;
-  font-weight: bold;
-  color: darkgreen;
+    font-family: monospace;
+    font-weight: bold;
+    color: darkgreen;
 }
+
 span.form-label {
-  display: block;
-  /*color: white;*/
-  padding: 0.3em 1em;
-  /*padding: 4px;*/
-  margin-top: 8px;
-  /*margin-bottom: 4px;*/
+    display: block;
+    /*color: white;*/
+    padding: 0.3em 1em;
+    /*padding: 4px;*/
+    margin-top: 8px;
+    /*margin-bottom: 4px;*/
 
 }
 
 span.form-label-secondary {
-  background: rgba(238,96,2,0.08);
-  /*background: linear-gradient(90deg, rgba(238,96,2,0.05) 0%, rgba(238,96,2,0.2) 100%);*/
-  font-size: medium;
+    background: rgba(238, 96, 2, 0.08);
+    /*background: linear-gradient(90deg, rgba(238,96,2,0.05) 0%, rgba(238,96,2,0.2) 100%);*/
+    font-size: medium;
 }
 
 #resource-url {
-  display: inline-block;
+    display: inline-block;
 }
 
 #url-edit {
-  margin-right: 10px;
+    margin-right: 10px;
 }
 
 .menu-item {
-  /*width: auto!important;*/
+    /*width: auto!important;*/
 }
 
 .nowidth {
-  width: auto!important;
+    width: auto !important;
 }
 
 /*.circle-progress {*/
@@ -197,30 +213,77 @@ span.form-label-secondary {
 /*}*/
 
 .progress {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: rgba(90, 200, 100, 0.9);
-  z-index: -1 ;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(90, 200, 100, 0.9);
+    z-index: -1;
 }
 
 .result-value {
-  font-family: monospace;
-}
-.result {
-  font-size: large;
-}
-.pwd {
-  font-size: x-large;
-  font-family: monospace;
-  color: darkgreen;
+    font-family: monospace;
 }
 
+.result {
+    font-size: large;
+}
+
+.pwd {
+    font-size: x-large;
+    font-family: monospace;
+    color: darkgreen;
+}
+
+.gen-action {
+    width: 2.5em;
+    height: 2em;
+}
+
+#master-sha-div {
+    margin-top: 8px;
+}
+
+#master-sha {
+    padding: 4px 10px;
+    border-radius: 5px;
+}
+
+
 .sha-correct {
-  background-color: lightgreen;
+    background-color: lightgreen;
 }
 
 .sha-incorrect {
-  background-color: lightcoral;
+    background-color: lightcoral;
+}
+
+.loader {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    opacity: 50%;
+    z-index: 1000;
+    text-align: center;
+    vertical-align: middle;
+    background: black;
+}
+
+.loader img {
+    width: 540px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+#saving-wait {
+    display: none;
+    font-size: medium;
+}
+#saving-wait img {
+    height: 1.5em;
+    padding-right: 5px;
 }

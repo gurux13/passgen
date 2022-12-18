@@ -11,6 +11,7 @@ class ResourceAccount(db.Model):
     human_readable = db.Column(db.String(256))
     revision = db.Column(db.String(256))
     lasthash = db.Column(db.String(32))
+    last_used_on = db.Column(db.DateTime)
 
 class Resource(db.Model):
     __tablename__ = 'resource'
@@ -29,5 +30,4 @@ class Resource(db.Model):
     digits = db.Column(db.Boolean)
     symbols = db.Column(db.Boolean)
     underscore = db.Column(db.Boolean)
-
 

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='ext/w3-theme-black.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='ext/font.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='ext/font-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/snackbar.css') }}">
     <script src="{{ url_for('static', filename='ext/jquery-3.6.0.js') }}"></script>
     <script src="{{ url_for('static', filename='js/base.js') }}"></script>
     <script src="{{ url_for('static', filename='js/foldable.js') }}"></script>
@@ -29,7 +30,9 @@
     </style>
 </head>
 <body>
-
+<div class="loader" id="loader">
+    <img src="{{ url_for('static', filename='img/loader.gif') }}">
+</div>
 <!-- Navbar -->
 <div class="w3-top">
     <div class="w3-bar w3-theme w3-top w3-left-align w3-large">

@@ -1,5 +1,6 @@
 import functools
 import json
+import time
 
 import dataclasses
 from flask import (
@@ -10,7 +11,7 @@ from auth import login_required
 from db_models.user import User
 from db_models.variant import Resource, ResourceAccount
 from globals import db, app
-from models.ui_variant import ResourceModel, ResourceAccountModel
+from models.ui_variant import ResourceModel, ResourceAccountModel, account_comp_key, resource_comp_key
 from models.userinfo import UserInfoModel
 from wrappers import db_view
 
@@ -50,7 +51,7 @@ def batchresources():
             ResourceModel(
                 db.id,
                 db.last_account_id,
-                [ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.revision, x.lasthash) for x in db.accounts],
+                sorted([ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.revision, x.lasthash, x.last_used_on) for x in db.accounts], key = account_comp_key),
                 db.name,
                 db.url,
                 db.comment,
@@ -60,9 +61,19 @@ def batchresources():
                 db.symbols,
                 db.underscore,
             ), all_resources)
+    all_resources_model = sorted(all_resources_model, key=resource_comp_key)
     response = app.response_class(
         response=json.dumps({'resources': list(all_resources_model), 'userinfo': userinfo}, cls=EnhancedJSONEncoder),
         status=200,
         mimetype='application/json'
     )
     return response
+
+@bp.route('/generated', methods=['POST'])
+@db_view
+@login_required
+def generated():
+    data = json.loads(request.data)
+    print(request.data)
+    time.sleep(1)
+    return batchresources()

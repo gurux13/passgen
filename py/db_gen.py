@@ -1,7 +1,7 @@
 # $env:MYSQL_USER='passgen'
-# $env:MYSQL_PASSWORD=''
+# $env:MYSQL_PASSWORD='163264'
 # $env:FLASK_KEY='blah'
-# rm -r .\migrations\;(type erase.py | flask shell); flask db init; flask db migrate; flask db upgrade
+# rm -r .\migrations\;$env:SCRIPT='erase.sql'; (type run_script.py | flask shell); flask db init; flask db migrate; flask db upgrade;$env:SCRIPT='migrate.sql'; (type run_script.py | flask shell);
 
 
 from flask_script import Manager
