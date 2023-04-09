@@ -173,6 +173,9 @@ function searchResources(unlimited = false) {
 
 function reloadAccount() {
     $("#selected-account").text(selected_account.human_readable ?? DEFAULT_ACCOUNT_NAME);
+    $("#selected-account").show();
+    $("#selected-params").show();
+    $("#hash-account-for").show();
     const isNew = selected_account.id === null;
     if (isNew) {
         $("#selected-account-new").show();
@@ -188,6 +191,9 @@ function reloadAccount() {
 
 function reloadResource() {
     $("#selected-resource").text(selected_resource.name);
+    if (selected_resource?.name != null) {
+        $("#selected-resource").show();
+    }
     const isNew = selected_resource.id === null;
     if (isNew) {
         $("#selected-resource-new").show();
@@ -531,13 +537,18 @@ async function withSaveLoader(func) {
 function setShaColors() {
     const theSha = $("#master-sha").text();
     const expected_sha = selected_account.last_hash ?? userinfo.last_hash;
+    const expected_sha_from_account = selected_account.last_hash != null;
     if (expected_sha === theSha) {
         $("#master-sha").addClass("sha-correct");
         $("#master-sha").removeClass("sha-incorrect");
+        $("#when-sha-error").hide();
     } else {
         $("#master-sha").addClass("sha-incorrect");
         $("#master-sha").removeClass("sha-correct");
+        $("#when-sha-error").show();
     }
+    $("#hash-from-account").toggle(expected_sha_from_account);
+    $("#hash-account-for").text(selected_account?.human_readable ?? DEFAULT_ACCOUNT_NAME);
 }
 
 async function generate_click() {
