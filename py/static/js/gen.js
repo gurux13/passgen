@@ -22,13 +22,18 @@ const DEFAULT_ACCOUNT_NAME = "По умолчанию";
 
 
 function onDataLoaded() {
-    let resourceName = all_resources[0]?.name;
-    if (userinfo.last_resource_id != null) {
-        resourceName = all_resources.filter(x => x.id == userinfo.last_resource_id)[0]?.name;
+    // let resourceName = all_resources[0]?.name;
+    // if (userinfo.last_resource_id != null) {
+    //     resourceName = all_resources.filter(x => x.id == userinfo.last_resource_id)[0]?.name;
+    // }
+    // $("#resource-name").val(resourceName ?? "");
+    $("#resource-name").val("");
+    // last_search = undefined;
+    if ($("#resource-foldable .foldee").is(":visible")) {
+        last_search = undefined;
+        searchResources();
     }
-    $("#resource-name").val(resourceName ?? "");
-    last_search = undefined;
-    searchResources();
+    // searchResources();
     if (unsaved_resource?.id) {
         selected_resource = all_resources.filter(x => x.id == unsaved_resource.id)[0];
         if (selected_resource) {
@@ -359,13 +364,11 @@ $(function () {
             $("#resource-a").text(url);
             $("#resource-a").show();
             $("#resource-url").hide();
+            unsaved_resource.url = url;
         }
     });
     $("#result-label").click(() => {
         postponeCleanup();
-    });
-    $("#save-sha-more").click(() => {
-        $("#save-local-sha").animate({width: 'toggle'}, 350);
     });
     $("#save-global-sha").click(() => {
         saveSha(true);
@@ -569,7 +572,6 @@ async function generate_click() {
     const theSha = sha1hex(master).substr(0, 4).toUpperCase();
     $("#master-sha").text(theSha);
     setShaColors();
-    $("#save-local-sha").hide();
     $("div.res").slideDown(300);
     await withSaveLoader(() => {
         return $.ajax("generated", {

@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import List
 
-
+from db_models.variant import ResourceAccount
 
 
 @dataclass
@@ -28,11 +29,11 @@ class ResourceModel:
     underscore: bool
 
 
-def account_comp_key(acc: ResourceAccountModel) -> int:
-    return 1e20 if acc.last_used_on is None else acc.last_used_on
+def account_comp_key(acc: ResourceAccountModel) -> float:
+    return 1e20 if acc.last_used_on is None else -acc.last_used_on
 
 
-def resource_comp_key(resource:ResourceModel) -> int:
+def resource_comp_key(resource:ResourceModel) -> float:
     if len(resource.accounts) == 0:
         return 1e20
-    return account_comp_key(resource.accounts[0])
+    return min(map(account_comp_key, resource.accounts))
