@@ -23,6 +23,7 @@ bp = Blueprint('passgen', __name__)
 
 @bp.route('/', )
 @db_view
+@login_required
 def index():
     # return '<br>'.join([x.resource for x in db.session.query(Variant)])
 
@@ -42,10 +43,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-@bp.route('/batchresources')
-@db_view
-@login_required
-def batchresources():
+def get_all_data():
     user = db.session.query(User).filter_by(id=g.user.id)[0]
     userinfo = UserInfoModel(
         g.user.id,
@@ -59,6 +57,7 @@ def batchresources():
         ResourceModel(
             db.id,
             db.last_account_id,
+            db.default_account_id,
             sorted(
                 [ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.revision, x.lasthash, dt_to_ts(x.last_used_on)) for x
                  in db.accounts], key=account_comp_key),
@@ -72,8 +71,14 @@ def batchresources():
             db.underscore,
         ), all_resources)
     all_resources_model = sorted(all_resources_model, key=resource_comp_key)
+    return {'resources': list(all_resources_model), 'userinfo': userinfo}
+@bp.route('/batchresources')
+@db_view
+@login_required
+def batchresources():
+    data = get_all_data()
     response = app.response_class(
-        response=json.dumps({'resources': list(all_resources_model), 'userinfo': userinfo}, cls=EnhancedJSONEncoder),
+        response=json.dumps(data, cls=EnhancedJSONEncoder),
         status=200,
         mimetype='application/json'
     )
@@ -93,7 +98,6 @@ def generated():
         resource = Resource()
         resource.login_id = g.user.id
         db.session.add(resource)
-
     else:
         resources = list(db.session.query(Resource).filter_by(id=client_resource.id))
         if len(resources) == 0 or resources[0].login_id != g.user.id:
@@ -121,8 +125,19 @@ def generated():
     user = db.session.query(User).filter_by(id=g.user.id)[0]
     user.lastresource = resource
     db.session.commit()
+
+    db.session.refresh(resource)
+    db.session.refresh(account)
+
+    data = get_all_data()
+    data['this_resource_id'] = resource.id
+    data['this_account_id'] = account.id
     # time.sleep(1)
-    return batchresources()
+    return app.response_class(
+        response=json.dumps(data, cls=EnhancedJSONEncoder),
+        status=200,
+        mimetype='application/json'
+    )
 
 
 @bp.route('/newsha', methods=['POST'])

@@ -21,7 +21,7 @@ def hash_password(password: str) -> str:
 def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if g.user is None:
+        if 'user' not in dir(g) or g.user is None:
             return redirect(url_for('auth.login'))
         return view(**kwargs)
 

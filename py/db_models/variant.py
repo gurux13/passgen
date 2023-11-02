@@ -1,3 +1,5 @@
+from sqlalchemy import UniqueConstraint
+
 from globals import db
 
 class ResourceAccount(db.Model):
@@ -12,6 +14,8 @@ class ResourceAccount(db.Model):
     revision = db.Column(db.String(256))
     lasthash = db.Column(db.String(32))
     last_used_on = db.Column(db.DateTime)
+    __table_args__ = (UniqueConstraint("resource_id", "human_readable", name="name"),)
+
 
 class Resource(db.Model):
     __tablename__ = 'resource'
@@ -19,9 +23,13 @@ class Resource(db.Model):
     login_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     login = db.relation('User', foreign_keys=login_id)
     last_account_id = db.Column(db.Integer, db.ForeignKey('resource_account.id'))
+
     last_account = db.relation('ResourceAccount', foreign_keys=last_account_id)
 
-    name = db.Column(db.String(256))
+    default_account_id = db.Column(db.Integer, db.ForeignKey('resource_account.id'))
+    default_account = db.relation('ResourceAccount', foreign_keys=default_account_id)
+
+    name = db.Column(db.String(256), unique=True)
     url = db.Column(db.String(256))
     comment = db.Column(db.String(4096))
 

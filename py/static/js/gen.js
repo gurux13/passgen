@@ -55,6 +55,12 @@ function processData(data) {
     }
     all_resources = data.resources;
     userinfo = data.userinfo;
+    if (data.this_resource_id != null) {
+        unsaved_resource.id = data.this_resource_id;
+    }
+    if (data.this_account_id != null) {
+        unsaved_account.id = data.this_account_id;
+    }
     onDataLoaded();
 
 }
@@ -70,7 +76,9 @@ function makeNewAccount(name) {
         "id": null,
         "pass_part": "",
         "human_readable": name,
-        "revision": "0"
+        "revision": "0",
+        "last_hash": null,
+        "last_used_on": null,
     }
 }
 
@@ -79,6 +87,7 @@ function makeNewResource(name) {
         "name": name,
         "id": null,
         "default_account_id": null,
+        "last_account_id": null,
         "accounts": [
             makeNewAccount(DEFAULT_ACCOUNT_NAME),
         ],
@@ -236,10 +245,10 @@ function onAccountSelected(account, isDefault, isNew) {
 }
 
 function selectDefaultAccount() {
-    if (selected_resource.accounts.length == 1) {
+    if (selected_resource.accounts.length === 1) {
         $("#matching-accounts .resource-found").click();
     } else {
-        const account = selected_resource.accounts.filter(x => x.id == selected_resource.default_account_id)[0];
+        const account = selected_resource.accounts.filter(x => x.id === selected_resource.default_account_id)[0];
         if (account != null) {
             onAccountSelected(account.human_readable, account.human_readable == null, false);
         }
@@ -496,7 +505,11 @@ function copyResultToClipboard() {
 }
 
 function revealPassword() {
-    $("#result").text($("#result").prop('data-pwd'));
+    if ($("#result").text() == $("#result").prop('data-pwd')) {
+        $("#result").text($("#result").prop('data-pwd').replaceAll(/./g, '*'));
+    } else {
+        $("#result").text($("#result").prop('data-pwd'));
+    }
 }
 
 async function saveSha(isGlobal) {
