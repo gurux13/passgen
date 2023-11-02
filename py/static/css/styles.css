@@ -63,15 +63,6 @@ input[type=submit]:hover {
     justify-content: space-around;
 }
 
-.resource-finder {
-    border: 1px solid #ddd;
-}
-
-.resource-finder input {
-    margin: 0;
-    border-radius: 0;
-}
-
 .resource-found {
     flex: 1;
     margin: 6px;

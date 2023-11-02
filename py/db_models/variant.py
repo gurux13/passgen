@@ -5,7 +5,7 @@ from globals import db
 class ResourceAccount(db.Model):
     __tablename__ = 'resource_account'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    resource_id = db.Column(db.Integer, db.ForeignKey('resource.id', use_alter=True))
+    resource_id = db.Column(db.Integer, db.ForeignKey('resource.id', use_alter=True), nullable=False)
     resource = db.relation('Resource', foreign_keys=resource_id, backref=db.backref("accounts",cascade="all, delete",
         passive_deletes=True))
 
@@ -20,22 +20,19 @@ class ResourceAccount(db.Model):
 class Resource(db.Model):
     __tablename__ = 'resource'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    login_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    login_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     login = db.relation('User', foreign_keys=login_id)
     last_account_id = db.Column(db.Integer, db.ForeignKey('resource_account.id'))
 
     last_account = db.relation('ResourceAccount', foreign_keys=last_account_id)
 
-    default_account_id = db.Column(db.Integer, db.ForeignKey('resource_account.id'))
-    default_account = db.relation('ResourceAccount', foreign_keys=default_account_id)
-
-    name = db.Column(db.String(256), unique=True)
+    name = db.Column(db.String(256), unique=True, nullable=False)
     url = db.Column(db.String(256))
     comment = db.Column(db.String(4096))
 
-    length = db.Column(db.Integer)
-    letters = db.Column(db.Boolean)
-    digits = db.Column(db.Boolean)
-    symbols = db.Column(db.Boolean)
-    underscore = db.Column(db.Boolean)
+    length = db.Column(db.Integer, nullable=False)
+    letters = db.Column(db.Boolean, nullable=False)
+    digits = db.Column(db.Boolean, nullable=False)
+    symbols = db.Column(db.Boolean, nullable=False)
+    underscore = db.Column(db.Boolean, nullable=False)
 

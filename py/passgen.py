@@ -57,7 +57,6 @@ def get_all_data():
         ResourceModel(
             db.id,
             db.last_account_id,
-            db.default_account_id,
             sorted(
                 [ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.revision, x.lasthash, dt_to_ts(x.last_used_on)) for x
                  in db.accounts], key=account_comp_key),
@@ -72,6 +71,22 @@ def get_all_data():
         ), all_resources)
     all_resources_model = sorted(all_resources_model, key=resource_comp_key)
     return {'resources': list(all_resources_model), 'userinfo': userinfo}
+
+
+@bp.route('/newurl', methods=['POST'])
+@db_view
+@login_required
+def new_url():
+    data = json.loads(request.data)
+    print(data)
+    resources = list(db.session.query(Resource).filter_by(id = data['resource_id']))
+
+    if len(resources) != 1 or resources[0].login_id != g.user.id:
+        return app.response_class("Access denied", status=403)
+    resources[0].url = data['url']
+    db.session.commit()
+    return app.response_class('"OK"', status=200)
+
 @bp.route('/batchresources')
 @db_view
 @login_required

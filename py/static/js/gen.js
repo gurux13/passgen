@@ -28,6 +28,7 @@ function onDataLoaded() {
     // }
     // $("#resource-name").val(resourceName ?? "");
     $("#resource-name").val("");
+    $("#account-name").val("");
     // last_search = undefined;
     if ($("#resource-foldable .foldee").is(":visible")) {
         last_search = undefined;
@@ -35,13 +36,13 @@ function onDataLoaded() {
     }
     // searchResources();
     if (unsaved_resource?.id) {
-        selected_resource = all_resources.filter(x => x.id == unsaved_resource.id)[0];
+        selected_resource = all_resources.filter(x => x.id === unsaved_resource.id)[0];
         if (selected_resource) {
             reloadResource();
         }
     }
     if (unsaved_account?.id && selected_resource) {
-        selected_account = selected_resource.accounts.filter(x => x.id == unsaved_account.id)[0];
+        selected_account = selected_resource.accounts.filter(x => x.id === unsaved_account.id)[0];
         if (selected_account) {
             reloadAccount();
         }
@@ -62,7 +63,10 @@ function processData(data) {
         unsaved_account.id = data.this_account_id;
     }
     onDataLoaded();
-
+    last_search = null;
+    searchResources();
+    last_account_search = null;
+    searchAccounts();
 }
 
 function load_resources() {
@@ -73,12 +77,7 @@ function load_resources() {
 
 function makeNewAccount(name) {
     return {
-        "id": null,
-        "pass_part": "",
-        "human_readable": name,
-        "revision": "0",
-        "last_hash": null,
-        "last_used_on": null,
+        "id": null, "pass_part": null, "human_readable": name, "revision": "0", "last_hash": null, "last_used_on": null,
     }
 }
 
@@ -86,11 +85,8 @@ function makeNewResource(name) {
     return {
         "name": name,
         "id": null,
-        "default_account_id": null,
         "last_account_id": null,
-        "accounts": [
-            makeNewAccount(DEFAULT_ACCOUNT_NAME),
-        ],
+        "accounts": [makeNewAccount(null),],
         "url": "https://" + name,
         "comment": "",
         "length": 12,
@@ -101,14 +97,24 @@ function makeNewResource(name) {
     }
 }
 
+function ensureResourceContainsDefaultAccount(resource) {
+    if (resource.accounts.find(x => x.human_readable == null)) {
+        return;
+    }
+    resource.accounts.push(makeNewAccount(null));
+}
 
 function searchAccounts(unlimited = false) {
+    if (!selected_resource) {
+        return;
+    }
     const new_text = $("#account-name").val();
     if (new_text == last_account_search && !unlimited) {
         return;
     }
     last_account_search = new_text;
-    const matching = selected_resource.accounts.filter(account => account.pass_part?.includes(new_text) || account.human_readable?.includes(new_text));
+    ensureResourceContainsDefaultAccount(selected_resource);
+    const matching = selected_resource.accounts.filter(account => account.pass_part?.includes(new_text) || (account.human_readable ?? '').includes(new_text));
     const shouldShowNew = new_text && !matching.some(x => x.human_readable?.toLowerCase() === new_text.toLowerCase());
     const matchingDiv = $("#matching-accounts");
     matchingDiv.html('');
@@ -148,7 +154,7 @@ function searchResources(unlimited = false) {
         return;
     }
     last_search = new_text;
-    const matching = all_resources.filter(resource => resource.name.includes(new_text) || resource.comment.includes(new_text));
+    const matching = all_resources.filter(resource => resource.name.includes(new_text) || resource.comment?.includes(new_text));
     const shouldShowNew = new_text && !matching.some(x => x.name.toLowerCase() === new_text.toLowerCase());
     const matchingDiv = $("#matching-resources");
     matchingDiv.html('');
@@ -248,7 +254,7 @@ function selectDefaultAccount() {
     if (selected_resource.accounts.length === 1) {
         $("#matching-accounts .resource-found").click();
     } else {
-        const account = selected_resource.accounts.filter(x => x.id === selected_resource.default_account_id)[0];
+        const account = selected_resource.accounts.find(x => x.human_readable == null);
         if (account != null) {
             onAccountSelected(account.human_readable, account.human_readable == null, false);
         }
@@ -256,7 +262,7 @@ function selectDefaultAccount() {
 }
 
 function onSelectionChanged() {
-    if ($("#result").prop('data-pwd')) {
+    if ($("#result").prop('data-pwd') && unsaved_account?.id != null && unsaved_resource?.id != null) {
         generate_click();
     }
 }
@@ -330,6 +336,19 @@ function setHtmlParamsFromSelection() {
     recalcUnsavedParams();
 }
 
+async function saveUrl() {
+    if (unsaved_resource.id == null) {
+        return;
+    }
+    await withSaveLoader(async() => {
+        return $.ajax("newurl", {
+            method: "post", data: JSON.stringify({
+                resource_id: unsaved_resource.id, url: unsaved_resource.url
+            }), dataType: 'json', contentType: "application/json; charset=utf-8", async: true
+        });
+    });
+}
+
 $(function () {
     $(".gen-input").change(() => onParamsChangeInHtml());
     $(".gen-input").keyup(() => onParamsChangeInHtml());
@@ -359,7 +378,7 @@ $(function () {
             $("#url-edit").click();
         }
     });
-    $("#url-edit").click(function () {
+    $("#url-edit").click(async function () {
         if ($("#resource-a").is(":visible")) {
             $("#resource-a").hide();
             $("#resource-url").val($("#resource-a").attr('href'));
@@ -373,7 +392,10 @@ $(function () {
             $("#resource-a").text(url);
             $("#resource-a").show();
             $("#resource-url").hide();
-            unsaved_resource.url = url;
+            if (unsaved_resource.url != url) {
+                unsaved_resource.url = url;
+                await saveUrl();
+            }
         }
     });
     $("#result-label").click(() => {
@@ -385,12 +407,12 @@ $(function () {
     $("#save-local-sha").click(() => {
         saveSha(false);
     });
-    $(".gen-input").keypress(function (event){
-		postponeCleanup();
-		if (event.charCode == 13) {
-			generate_click();
-		}
-	});
+    $(".gen-input").keypress(function (event) {
+        postponeCleanup();
+        if (event.charCode == 13) {
+            generate_click();
+        }
+    });
     load_resources();
 });
 
@@ -521,20 +543,12 @@ async function saveSha(isGlobal) {
         return;
     }
     return $.ajax("newsha", {
-        method: "post",
-        data: JSON.stringify({
-            resource_id: unsaved_resource.id,
-            account_id: unsaved_account.id,
-            sha: theSha,
-            global: isGlobal,
-        }),
-        dataType: 'json',
-        contentType: "application/json; charset=utf-8",
-        success: (data) => {
+        method: "post", data: JSON.stringify({
+            resource_id: unsaved_resource.id, account_id: unsaved_account.id, sha: theSha, global: isGlobal,
+        }), dataType: 'json', contentType: "application/json; charset=utf-8", success: (data) => {
             processData(data);
             setShaColors();
-        },
-        async: true,
+        }, async: true,
     });
 }
 
@@ -546,14 +560,17 @@ async function withLoader(func) {
 
 async function withSaveLoader(func) {
     $("#saving-wait").slideDown();
-    await func();
-    $("#saving-wait").slideUp();
+    try {
+        await func();
+    } finally {
+        $("#saving-wait").slideUp();
+    }
 }
 
 function setShaColors() {
     const theSha = $("#master-sha").text();
-    const expected_sha = selected_account.last_hash ?? userinfo.last_hash;
-    const expected_sha_from_account = selected_account.last_hash != null;
+    const expected_sha = selected_account?.last_hash ?? userinfo.last_hash;
+    const expected_sha_from_account = selected_account?.last_hash != null;
     if (expected_sha === theSha) {
         $("#master-sha").addClass("sha-correct");
         $("#master-sha").removeClass("sha-incorrect");
@@ -569,7 +586,9 @@ function setShaColors() {
 
 async function generate_click() {
     enqueueCleanup();
+    setFold($("#params-foldable"), true);
     resource = unsaved_resource.name;
+
     length = unsaved_resource.length;
     revision = unsaved_account.revision;
 
@@ -579,7 +598,7 @@ async function generate_click() {
     underscore = unsaved_resource.underscore;
 
     master = $("#master-input").val();
-    pass = generate(resource, length, revision, master, letters, digits, symbols, underscore);
+    pass = generate(resource, unsaved_account.pass_part ?? unsaved_account.human_readable, length, revision, master, letters, digits, symbols, underscore);
     $("#result").text(pass.replaceAll(/./g, '*'));
     $("#result").prop('data-pwd', pass);
     const theSha = sha1hex(master).substr(0, 4).toUpperCase();
@@ -588,21 +607,15 @@ async function generate_click() {
     $("div.res").slideDown(300);
     await withSaveLoader(() => {
         return $.ajax("generated", {
-            method: "post",
-            data: JSON.stringify({
-                resource: unsaved_resource,
-                account: unsaved_account,
-            }),
-            dataType: 'json',
-            contentType: "application/json; charset=utf-8",
-            success: processData,
-            async: true,
+            method: "post", data: JSON.stringify({
+                resource: unsaved_resource, account: unsaved_account,
+            }), dataType: 'json', contentType: "application/json; charset=utf-8", success: processData, async: true,
         });
     });
 
 }
 
-known_resources = new Array();
+known_resources = [];
 
 function closeResList() {
     $("#resources-list").hide();
