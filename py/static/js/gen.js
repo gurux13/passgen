@@ -286,7 +286,7 @@ function onResourceSelected(resource, isNew) {
         $("#when-resource-selected").slideDown("fast");
         $("#resource-foldable .form-label").click();
         $("#resource-a").show();
-        $("#resource-url").hide();
+        $("#resource-url").css('visibility', 'hidden');
 
         onSelectionChanged();
     });
@@ -382,7 +382,7 @@ $(function () {
         if ($("#resource-a").is(":visible")) {
             $("#resource-a").hide();
             $("#resource-url").val($("#resource-a").attr('href'));
-            $("#resource-url").show();
+            $("#resource-url").css('visibility', 'visible');
         } else {
             let url = $("#resource-url").val();
             if (!url.includes('://')) {
@@ -391,7 +391,7 @@ $(function () {
             $("#resource-a").attr('href', url);
             $("#resource-a").text(url);
             $("#resource-a").show();
-            $("#resource-url").hide();
+            $("#resource-url").css('visibility', 'hidden');
             if (unsaved_resource.url != url) {
                 unsaved_resource.url = url;
                 await saveUrl();
@@ -574,11 +574,11 @@ function setShaColors() {
     if (expected_sha === theSha) {
         $("#master-sha").addClass("sha-correct");
         $("#master-sha").removeClass("sha-incorrect");
-        $("#when-sha-error").hide();
+        $("#when-sha-error").css('visibility', 'hidden');
     } else {
         $("#master-sha").addClass("sha-incorrect");
         $("#master-sha").removeClass("sha-correct");
-        $("#when-sha-error").show();
+        $("#when-sha-error").css('visibility', 'visible');
     }
     $("#hash-from-account").toggle(expected_sha_from_account);
     $("#hash-account-for").text(selected_account?.human_readable ?? DEFAULT_ACCOUNT_NAME);

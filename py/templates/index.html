@@ -1,91 +1,84 @@
 {% extends 'base.html' %}
-{% block title %}Генератор паролей{% endblock %}
+{% block title %}
+  Генератор паролей
+{% endblock %}
 {% block content %}
-    <script src="{{ url_for('static', filename='js/sha.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/crypto.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/gen.js') }}"></script>
+  <script src="{{ url_for('static', filename = 'js/sha.js') }}"></script>
+  <script src="{{ url_for('static', filename = 'js/crypto.js') }}"></script>
+  <script src="{{ url_for('static', filename = 'js/gen.js') }}"></script>
 
-    <div id="snackbar"></div>
+  <div id="snackbar"></div>
 
-    {#    <div id="resource-select">#}
-    <div class="foldable unfolded" id="resource-foldable">
-        <span class="form-label form-label-first form-label-primary"><span class="folded-icon">▼</span>Ресурс <span
-                id="selected-resource" class="selected-value"></span><span id="selected-resource-new"
-                                                                           class="selected-value-new"> (новый)</span></span>
-        <div class="resource-finder foldee">
-            <input type="text" id="resource-name" autocomplete="off" readonly
-                   onclick="this.removeAttribute(
-                    'readOnly');">
-            <div id="matching-resources" class="matching-values"></div>
-            <div id="matching-resources-extender" class="matching-extender">▼</div>
-        </div>
+  {# <div id="resource-select"> #}
+  <div class="foldable unfolded" id="resource-foldable">
+    <div class="foldable-label form-label-primary form-label">
+    <span class="folded-icon">▼</span>Ресурс <span id="selected-resource" class="selected-value"></span><span id="selected-resource-new" class="selected-value-new">(новый)</span>
     </div>
-    {#    </div>#}
-    <div id="when-resource-selected" style="display: none">
-        <div id="resource-url-div">
-            <span class="form-label-secondary form-label">URL</span>
+    <div class="resource-finder foldee">
+      <input type="text" id="resource-name" autocomplete="off" readonly onclick="this.removeAttribute(
+                    'readOnly');" />
+      <div id="matching-resources" class="matching-values"></div>
+      <div id="matching-resources-extender" class="matching-extender">▼</div>
+    </div>
+  </div>
+  {# </div> #}
+  <div id="when-resource-selected" style="display: none">
+    <div id="resource-url-div">
+      <div class="foldable-label form-label-secondary">
+        <span>URL</span> <button id="url-edit" class="borderless-button inlabel-button">✎</button>
+      </div>
+      <div id="resource-url-div-inner">
+        <a href="#" id="resource-a" target="_blank">https://</a>
+        <input type="url" id="resource-url" style="visibility: hidden;" class="gen-input" />
+      </div>
+    </div>
 
-            <button id="url-edit">✎</button>
-            <input type="url" id="resource-url" style="display: none">
-            <a href="#" id="resource-a" target="_blank">https://</a>
-        </div>
+    <div class="foldable unfolded" id="account-foldable">
+      <div class="form-label foldable-label form-label-primary"><span class="folded-icon">▼</span>Аккаунт <span id="selected-account" class="selected-value"></span><span id="selected-account-new" class="selected-value-new">(новый)</span></div>
+      <div class="account-finder foldee">
+        <input type="text" id="account-name" />
+        <div id="matching-accounts" class="matching-values"></div>
+        <div id="matching-accounts-extender" class="matching-extender">▼</div>
+      </div>
+    </div>
 
-        <div class="foldable unfolded" id="account-foldable">
-        <span class="form-label form-label-primary"><span class="folded-icon">▼</span>Аккаунт <span
-                id="selected-account" class="selected-value"></span><span id="selected-account-new"
-                                                                          class="selected-value-new"> (новый)</span></span>
-            <div class="account-finder foldee"><input type="text" id="account-name">
-                <div id="matching-accounts" class="matching-values"></div>
-                <div id="matching-accounts-extender" class="matching-extender">▼</div>
-            </div>
-        </div>
-
-
-        <div class="foldable unfolded" id="params-foldable">
-            <span class="form-label form-label-primary"><span
-                    class="folded-icon">▼</span>Параметры <span
-                    id="selected-params" class="selected-value"></span><span id="selected-params-changed"
-                                                                             class="selected-value-changed">*</span></span>
-            <div class="foldee">
-                <span class="form-label form-label-secondary">Длина</span>
-                <input type="text" name="length" id="length-input" class="gen-input">
-                <span class="form-label form-label-secondary">Ревизия</span>
-                <input type="text" name="revision" id="revision-input" class="gen-input">
-                <span class="form-label form-label-secondary">Составляющие пароля</span>
-                <input type="checkbox" name="letters" id="letters-input" class="gen-input"><span
-                    class="cb">Буквы</span><br>
-                <input type="checkbox" name="digits" id="digits-input" class="gen-input"><span
-                    class="cb">Цифры</span><br>
-                <input type="checkbox" name="symbols" id="symbols-input" class="gen-input"><span class="cb">Спец. символы</span><br>
-                <input type="checkbox" name="underscore" id="underscore-input" class="gen-input"><span
-                    class="cb">Подчёркивание</span><br>
-            </div>
-        </div>
-        <span class="form-label-secondary form-label">Мастер-пароль</span>
-        <input type="password" name="master" id="master-input" class="input-master gen-input"
-               autocomplete="new-password" readonly
-               onclick="this.removeAttribute(
+    <div class="foldable unfolded" id="params-foldable">
+      <div class="form-label foldable-label form-label-primary"><span class="folded-icon">▼</span>Параметры <span id="selected-params" class="selected-value"></span><span id="selected-params-changed" class="selected-value-changed">*</span></div>
+      <div class="foldee">
+        <div class="form-label form-label-secondary">Длина</div>
+        <input type="text" name="length" id="length-input" class="gen-input" />
+        <div class="form-label form-label-secondary">Ревизия</div>
+        <input type="text" name="revision" id="revision-input" class="gen-input" />
+        <div class="form-label form-label-secondary">Составляющие пароля</div>
+        <input type="checkbox" name="letters" id="letters-input" class="gen-input" /><span class="cb">Буквы</span><br />
+        <input type="checkbox" name="digits" id="digits-input" class="gen-input" /><span class="cb">Цифры</span><br />
+        <input type="checkbox" name="symbols" id="symbols-input" class="gen-input" /><span class="cb">Спец. символы</span><br />
+        <input type="checkbox" name="underscore" id="underscore-input" class="gen-input" /><span class="cb">Подчёркивание</span><br />
+      </div>
+    </div>
+    <div class="form-label form-label-secondary">
+    <span>Мастер-пароль</span>
+    </div>
+    <input type="password" name="master" id="master-input" class="input-master gen-input" autocomplete="new-password" readonly onclick="this.removeAttribute(
                     'readOnly');" onblur="this.setAttribute(
-                    'readOnly', 'readonly');">
-        <input type="button" name="generate" value="Генерировать" onclick="generate_click()">
-        <div class="res" style="display:none;">
-            <span class="form-label form-label-primary" id="result-label" style="position: relative"><div
-                    class="progress"></div>Результат</span>
-            <span class="form-label form-label-secondary">Хеш мастер-пароля<span id="hash-from-account"> (для аккаунта <span class="selected-value" id="hash-account-for"></span>)</span></span>
-            <div class="result" id="master-sha-div"><span class="result-value" id="master-sha"></span><span
-                    id="when-sha-error"><button class="gen-action" id="save-global-sha">💾</button> <button class="gen-action" id="save-local-sha">💾 ➔ аккаунт</button></span>
-            </div>
-            <span class="form-label form-label-secondary">Сгенерированный пароль</span>
-            <div class="pwd">
-                <a class="repeatable" href="#" onclick="copyResultToClipboard(); return false;"><span
-                        class="result-value" id="result"></span></a>
-                <button class="gen-action" onclick="copyResultToClipboard()"><span
-                        style="font-size: .7em; margin-right: .125em; position: relative; top: -.25em; left: -.125em">
-  📄<span style="position: absolute; top: .25em; left: .25em">📄</span></span></button>
-                <button class="gen-action" onclick="revealPassword()">👁</button>
-                <button class="gen-action" onclick="cleanup()">⌫</button>
-            </div>
-            <div id="saving-wait"><img src="{{ url_for("static", filename="img/pass-loader.gif") }}">Сохранение</div>
-        </div>
+                    'readOnly', 'readonly');" />
+    <input type="button" name="generate" value="Генерировать" onclick="generate_click()" />
+    <div class="res" style="display:none;">
+      <span class="form-label form-label-primary" id="result-label" style="position: relative"><div class="progress"></div>Результат</span>
+      <span class="form-label form-label-secondary">Хеш мастер-пароля<span id="hash-from-account">(для аккаунта <span class="selected-value" id="hash-account-for"></span>)</span></span>
+      <div class="result" id="master-sha-div">
+        <span class="result-value" id="master-sha"></span><span id="when-sha-error"><button class="gen-action borderless-button" id="save-global-sha">💾</button> <button class="gen-action" id="save-local-sha">💾 ➔ аккаунт</button></span>
+      </div>
+      <span class="form-label form-label-secondary">Сгенерированный пароль</span>
+      <div class="pwd">
+        <a class="repeatable" href="#" onclick="copyResultToClipboard(); return false;"><span class="result-value" id="result"></span></a>
+        <button class="gen-action borderless-button" onclick="copyResultToClipboard()"><span style="font-size: .7em; margin-right: .125em; position: relative; top: -.25em; left: -.125em">📄<span style="position: absolute; top: .25em; left: .25em">📄</span></span></button>
+        <button class="gen-action borderless-button" onclick="revealPassword()">👁</button>
+        <button class="gen-action borderless-button" onclick="cleanup()">⌫</button>
+      </div>
+      <div id="saving-wait">
+        <img src="{{ url_for('static', filename = 'img/pass-loader.gif') }}" />Сохранение
+      </div>
     </div>
+  </div>
 {% endblock %}

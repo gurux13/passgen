@@ -7,7 +7,7 @@
 }
 
 /* Style inputs with type="text", select elements and textareas */
-input[type=text], input[type=password], select, textarea {
+input[type=text], input[type=password], input[type=url], select, textarea {
     width: 100%; /* Full width */
     padding: 6px; /* Some padding */
     border: 1px solid #ccc; /* Gray border */
@@ -101,7 +101,6 @@ input[type=submit]:hover {
 
 #resource-url-div {
     width: 100%;
-    padding-top: 10px;
 }
 
 .selected-value-changed {
@@ -113,10 +112,18 @@ span.form-label-first {
     margin-top: 0px !important;
 }
 
-span.form-label-primary {
+div.form-label-primary {
     background: rgba(96, 2, 238, 0.09);
-    /*background: linear-gradient(90deg,  rgba(96,2,238,0.05) 0%, rgba(96,2,238,0.2) 100%);*/
+    /* background: linear-gradient(270deg,  rgba(96,2,238,0.00) 0%, rgba(96,2,238,0.2) 100%); */
     font-size: large;
+    border-radius: 10px;
+    width: 100%;
+}
+
+.foldable-label {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 3px;
 }
 
 .selected-object {
@@ -128,6 +135,10 @@ span.form-label-primary {
 
 .foldable .form-label {
     cursor: pointer;
+}
+
+.folded {
+    padding-bottom: 10px;
 }
 
 .folded-icon {
@@ -153,8 +164,9 @@ span.form-label-primary {
     border-radius: 5px;
     display: none;
 }
-span.form-label {
-    display: block;
+
+.form-label {
+    /* display: block; */
     /*color: white;*/
     padding: 0.3em 1em;
     /*padding: 4px;*/
@@ -163,7 +175,12 @@ span.form-label {
 
 }
 
-span.form-label-secondary {
+#resource-url-div-inner {
+    display: flex;
+    align-items: stretch;
+}
+
+.form-label-secondary {
     background: rgba(238, 96, 2, 0.08);
     /*background: linear-gradient(90deg, rgba(238,96,2,0.05) 0%, rgba(238,96,2,0.2) 100%);*/
     font-size: medium;
@@ -171,10 +188,27 @@ span.form-label-secondary {
 
 #resource-url {
     display: inline-block;
+    flex-grow: 1;
+}
+
+#resource-a {
+    align-self: center;
+    flex: 1;
+}
+
+.borderless-button {
+    border: none;
+    border-radius: 10px;
+    background-color: #ddd;
+}
+
+.borderless-button:hover {
+    background-color: #ccc;
 }
 
 #url-edit {
     margin-right: 10px;
+    width: 40px;
 }
 
 .menu-item {
@@ -213,6 +247,7 @@ span.form-label-secondary {
     bottom: 0;
     background: rgba(90, 200, 100, 0.9);
     z-index: -1;
+    border-radius: 10px;
 }
 
 .result-value {
@@ -231,6 +266,7 @@ span.form-label-secondary {
     font-size: x-large;
     font-family: monospace;
     color: darkgreen;
+    margin-top: 5px;
 }
 
 .gen-action {
@@ -322,3 +358,7 @@ span.form-label-secondary {
     margin-right: 6px;
 }
 
+.inlabel-button {
+    height: 30px;
+    margin-left: 20px;
+}
