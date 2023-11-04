@@ -64,12 +64,12 @@
                     'readOnly', 'readonly');" />
     <input type="button" name="generate" value="Генерировать" onclick="generate_click()" />
     <div class="res" style="display:none;">
-      <span class="form-label form-label-primary" id="result-label" style="position: relative"><div class="progress"></div>Результат</span>
-      <span class="form-label form-label-secondary">Хеш мастер-пароля<span id="hash-from-account">(для аккаунта <span class="selected-value" id="hash-account-for"></span>)</span></span>
+      <div class="form-label form-label-primary" id="result-label" style="position: relative"><div class="progress"></div>Результат</div>
+      <div class="form-label form-label-secondary">Хеш мастер-пароля<span id="hash-from-account">(для аккаунта <span class="selected-value" id="hash-account-for"></span>)</span></div>
       <div class="result" id="master-sha-div">
-        <span class="result-value" id="master-sha"></span><span id="when-sha-error"><button class="gen-action borderless-button" id="save-global-sha">💾</button> <button class="gen-action" id="save-local-sha">💾 ➔ аккаунт</button></span>
+        <span class="result-value" id="master-sha"></span><span id="when-sha-error"><button class="gen-action borderless-button" id="save-global-sha">💾</button> <button class="gen-action borderless-button" id="save-local-sha">💾 ➔ аккаунт</button></span>
       </div>
-      <span class="form-label form-label-secondary">Сгенерированный пароль</span>
+      <div class="form-label form-label-secondary">Сгенерированный пароль</div>
       <div class="pwd">
         <a class="repeatable" href="#" onclick="copyResultToClipboard(); return false;"><span class="result-value" id="result"></span></a>
         <button class="gen-action borderless-button" onclick="copyResultToClipboard()"><span style="font-size: .7em; margin-right: .125em; position: relative; top: -.25em; left: -.125em">📄<span style="position: absolute; top: .25em; left: .25em">📄</span></span></button>
