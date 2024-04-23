@@ -46,11 +46,9 @@ WHERE `variants`.`login_id` IN (
 INSERT INTO `passgen_py`.`resource_account`
 (
 `resource_id`,
---`pass_part`,
 `revision`)
 SELECT
     resource.id,
---    variants.resource,
 
     `variants`.`revision`
 FROM `passgen`.`variants`, passgen_py.resource
