@@ -1,0 +1,181 @@
+{% extends 'base.html' %} {% block title %} Ресурсы {% endblock %} {% block
+content %}
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+<script src="{{ url_for('static', filename='js/angular/resources.js') }}"></script>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+
+{% raw %}
+<div id="snackbar"></div>
+<div
+  id="app"
+  ng-app="resourcesApp"
+  ng-controller="resourcesCtrl"
+  style="display: none; max-width: 500px"
+>
+  <div id="loader" ng-show="loading">
+    <i class="fa fa-spinner fa-spin"></i>
+  </div>
+  <div id="all-resources" ng-hide="resource || loading">
+    <div id="search-resources">
+      <input
+        type="text"
+        id="resource-name"
+        ng-model="search"
+        placeholder="Поиск..."
+        ng-keyup="searchResources()"
+        ng-change="searchResources()"
+        ng-blur="searchResources()"
+      />
+    </div>
+    <table id="all-resources-tbl">
+      <tr>
+        <th></th>
+        <th>Ресурс</th>
+        <th>URL</th>
+        <th>Параметры</th>
+        
+      </tr>
+      <tr ng-repeat="resource in resources" ng-click="selectResource()" class="resource-row">
+        <td class="delete-resource-td">
+            <button class="delete-resource" ng-click="deleteResource($event, resource)">
+              <svg fill="#000000" width="800px" height="800px" viewBox="-7.29 0 122.88 122.88" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  style="enable-background:new 0 0 108.29 122.88" xml:space="preserve">
+  
+                  <g>
+                  
+                  <path d="M77.4,49.1h-5.94v56.09h5.94V49.1L77.4,49.1L77.4,49.1z M6.06,9.06h32.16V6.2c0-0.1,0-0.19,0.01-0.29 c0.13-2.85,2.22-5.25,5.01-5.79C43.97-0.02,44.64,0,45.38,0H63.9c0.25,0,0.49-0.01,0.73,0.02c1.58,0.08,3.02,0.76,4.06,1.81 c1.03,1.03,1.69,2.43,1.79,3.98c0.01,0.18,0.02,0.37,0.02,0.55v2.7H103c0.44,0,0.75,0.01,1.19,0.08c2.21,0.36,3.88,2.13,4.07,4.37 c0.02,0.24,0.03,0.47,0.03,0.71v10.54c0,1.47-1.19,2.66-2.67,2.66H2.67C1.19,27.43,0,26.23,0,24.76V24.7v-9.91 C0,10.64,2.04,9.06,6.06,9.06L6.06,9.06z M58.07,49.1h-5.95v56.09h5.95V49.1L58.07,49.1L58.07,49.1z M38.74,49.1H32.8v56.09h5.95 V49.1L38.74,49.1L38.74,49.1z M10.74,31.57h87.09c0.36,0.02,0.66,0.04,1.03,0.1c1.25,0.21,2.4,0.81,3.27,1.66 c1.01,1,1.67,2.34,1.7,3.83c0,0.31-0.03,0.63-0.06,0.95l-7.33,78.66c-0.1,1.03-0.27,1.95-0.79,2.92c-1.01,1.88-2.88,3.19-5.2,3.19 H18.4c-0.55,0-1.05,0-1.59-0.08c-0.22-0.03-0.43-0.08-0.64-0.14c-0.31-0.09-0.62-0.21-0.91-0.35c-0.27-0.13-0.52-0.27-0.78-0.45 c-1.51-1.04-2.51-2.78-2.69-4.72L4.5,37.88c-0.02-0.25-0.04-0.52-0.04-0.77c0.05-1.48,0.7-2.8,1.7-3.79 c0.88-0.86,2.06-1.47,3.33-1.67C9.9,31.59,10.34,31.57,10.74,31.57L10.74,31.57z M97.75,36.9H10.6c-0.57,0-0.84,0.1-0.79,0.7 l7.27,79.05h0l0,0.01c0.03,0.38,0.2,0.69,0.45,0.83l0,0l0.08,0.03l0.06,0.01l0.08,0h72.69c0.6,0,0.67-0.84,0.71-1.28l7.34-78.71 C98.53,37.04,98.23,36.9,97.75,36.9L97.75,36.9z"/>
+                  
+                  </g>
+                  
+                  </svg>
+            </button>
+          </td>        
+        <td>{{ resource.name }}</td>
+        <td><a target="_blank" ng-hide="!resource.url" href="{{ resource.link_url }}">{{resource.url}}</a></td>
+        <td class="resources-params">{{ resource.params }}</td>
+       
+      </tr>
+    </table>
+  </div>
+  <div id="resource" ng-show="resource" >
+    <div>
+      <button id="close-button" ng-click="closeResource()">
+        <?xml version="1.0" ?><!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'>
+        <svg
+          height="512px"
+          id="Layer_1"
+          style="enable-background: new 0 0 512 512"
+          version="1.1"
+          viewBox="0 0 512 512"
+          width="512px"
+          xml:space="preserve"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+        >
+          <polygon
+            points="352,128.4 319.7,96 160,256 160,256 160,256 319.7,416 352,383.6 224.7,256 "
+          />
+        </svg>
+      </button>
+    </div>
+    <div id="resource-name-div">
+      <div class="form-label form-label-primary">Ресурс</div>
+      <input
+        type="text"
+        id="resource-name"
+        ng-model="resource.name"
+        class="gen-input"
+      />
+      <div id="resource-url-div">
+        <div class="form-label form-label-primary">URL</div>
+        <input
+          type="text"
+          id="resource-url"
+          ng-model="resource.url"
+          class="gen-input"
+        />
+      </div>
+      <div class="form-label form-label-primary">
+        Параметры <span id="selected-params" class="selected-value"></span>
+      </div>
+      <div class="foldee">
+        <div class="form-label form-label-secondary">Длина</div>
+        <input
+          type="text"
+          name="length"
+          id="length-input"
+          class="gen-input"
+          ng-model="resource.length"
+        />
+        <div class="form-label form-label-secondary">Составляющие пароля</div>
+        <input
+          type="checkbox"
+          name="letters"
+          id="letters-input"
+          class="gen-input"
+          ng-model="resource.letters"
+        /><span class="cb cb-gap">Буквы</span><br />
+        <input
+          type="checkbox"
+          name="digits"
+          id="digits-input"
+          class="gen-input"
+          ng-model="resource.digits"
+        /><span class="cb cb-gap">Цифры</span><br />
+        <input
+          type="checkbox"
+          name="symbols"
+          id="symbols-input"
+          class="gen-input"
+          ng-model="resource.symbols"
+        /><span class="cb cb-gap">Спец. символы</span><br />
+        <input
+          type="checkbox"
+          name="underscore"
+          id="underscore-input"
+          class="gen-input"
+          ng-model="resource.underscore"
+        /><span class="cb cb-gap">Подчёркивание</span><br />
+      </div>
+      <button
+        class="resource-button"
+        ng-click="saveResource()"
+        ng-disabled="!isResourceDirty()"
+        id="save-resource"
+      >
+        Сохранить
+      </button>
+      <button
+        class="resource-button"
+        ng-click="deleteResource($event, resource)"
+        id="delete-resource"
+      >
+        Удалить ресурс
+      </button>
+      <i
+        class="fa fa-spinner fa-spin"
+        ng-class="{hidden: !saving && !deleting}"
+      ></i>
+
+      <table id="accounts">
+        <tr>
+          <th>Аккаунт</th>
+          <th>Ревизия</th>
+          <th>Последнее использование</th>
+        </tr>
+        <tr ng-repeat="account in resource.accounts">
+          <td ng-class="{default_account: !account.human_readable}">
+            {{ account.display_human_readable }}
+          </td>
+          <td>{{ account.revision }}</td>
+          <td>
+            <span ng-if="account.last_used_on">{{ account.last_used_on + '000' | date: "dd.MM.yyyy hh:mm:ss"}}</span><span ng-if="!account.last_used_on">?</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  {% endraw %} {% endblock %}
+</div>

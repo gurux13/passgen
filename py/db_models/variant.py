@@ -26,7 +26,7 @@ class Resource(db.Model):
 
     last_account = db.relation('ResourceAccount', foreign_keys=last_account_id)
 
-    name = db.Column(db.String(256), unique=True, nullable=False)
+    name = db.Column(db.String(256), nullable=False)
     url = db.Column(db.String(256))
     comment = db.Column(db.String(4096))
 

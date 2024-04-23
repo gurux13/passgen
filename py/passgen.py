@@ -32,8 +32,9 @@ def index():
 
 @bp.route('/resources')
 @db_view
+@login_required
 def resources():
-    return "Hello, resources"
+    return render_template('resources.html')
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
@@ -177,4 +178,37 @@ def newsha():
         db.session.commit()
     print(request.data)
     # time.sleep(1)
+    return batchresources()
+
+@bp.route('/updateresource', methods=['POST'])
+@db_view
+@login_required
+def updateresource():
+    data = json.loads(request.data)
+    print(data)
+    resource: Resource = db.session.query(Resource).filter_by(id=data['id'])[0]
+    if resource.login_id != g.user.id:
+        return app.response_class("Access denied", status=403)
+    resource.name = data['name']
+    resource.comment = data['comment']
+    resource.length = data['length']
+    resource.letters = data['letters']
+    resource.digits = data['digits']
+    resource.symbols = data['symbols']
+    resource.underscore = data['underscore']
+    resource.url = data['url']
+    db.session.commit()
+    return batchresources()
+
+@bp.route('/deleteresource', methods=['POST'])
+@db_view
+@login_required
+def deleteresource():
+    id = json.loads(request.data)
+    
+    resource: Resource = db.session.query(Resource).filter_by(id=id)[0]
+    if resource.login_id != g.user.id:
+        return app.response_class("Access denied", status=403)
+    db.session.delete(resource)
+    db.session.commit()
     return batchresources()
