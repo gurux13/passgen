@@ -154,7 +154,7 @@ function searchResources(unlimited = false) {
         return;
     }
     last_search = new_text;
-    const matching = all_resources.filter(resource => resource.name.includes(new_text) || resource.comment?.includes(new_text));
+    const matching = all_resources.filter(resource => resource.name.toLowerCase().includes(new_text.toLowerCase()) || resource.comment?.toLowerCase()?.includes(new_text.toLowerCase()));
     const shouldShowNew = new_text && !matching.some(x => x.name.toLowerCase() === new_text.toLowerCase());
     const matchingDiv = $("#matching-resources");
     matchingDiv.html('');

@@ -50,11 +50,11 @@ function resourceParams(resource) {
             $log.log($scope.resource);
         }
         $scope.searchResources = function() {
-            const search = this.search;
+            const search = this.search.toLowerCase();
             $log.log(search);
             if (search) {
                 $scope.resources = $scope.all_resources.filter(function(resource) {
-                    return resource.name.includes(search) || resource.url.includes(search);
+                    return resource.name.toLowerCase().includes(search) || resource.url.toLowerCase().includes(search);
                 });
             } else {
                 $scope.resources = $scope.all_resources;
