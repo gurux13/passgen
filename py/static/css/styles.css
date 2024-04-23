@@ -478,6 +478,11 @@ div.form-label-primary {
     text-align: left;
     padding-right: 10px;
     color: #344;
+    max-width: 40vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
 }
 
 .resource-row:hover {

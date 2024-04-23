@@ -35,8 +35,6 @@ content %}
         <th></th>
         <th>Ресурс</th>
         <th>URL</th>
-        <th>Параметры</th>
-        
       </tr>
       <tr ng-repeat="resource in resources" ng-click="selectResource()" class="resource-row">
         <td class="delete-resource-td">
@@ -54,8 +52,6 @@ content %}
           </td>        
         <td>{{ resource.name }}</td>
         <td><a target="_blank" ng-hide="!resource.url" href="{{ resource.link_url }}">{{resource.url}}</a></td>
-        <td class="resources-params">{{ resource.params }}</td>
-       
       </tr>
     </table>
   </div>
