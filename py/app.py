@@ -36,7 +36,8 @@ def create_app():
     globals.db = SQLAlchemy(app)
     globals.app = app
     migrate = Migrate(app, globals.db)
-    from . import auth, passgen
+    #from . import auth, passgen
+    import auth, passgen
     app.register_blueprint(auth.bp)
     app.register_blueprint(passgen.bp)
 
