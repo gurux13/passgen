@@ -8,6 +8,7 @@ function copyToClipboard(text) {
     document.body.removeChild(input);
 }
 
+const MAX_POPULAR_ACCOUNTS = 5;
 
 let all_resources = [];
 let userinfo = undefined;
@@ -15,6 +16,8 @@ let selected_resource = undefined;
 let selected_account = undefined;
 let unsaved_account = undefined;
 let unsaved_resource = undefined;
+
+let popular_accounts = [];
 
 let last_account_search = null;
 let last_search = undefined;
@@ -27,8 +30,8 @@ function onDataLoaded() {
     //     resourceName = all_resources.filter(x => x.id == userinfo.last_resource_id)[0]?.name;
     // }
     // $("#resource-name").val(resourceName ?? "");
-    $("#resource-name").val("");
-    $("#account-name").val("");
+    // $("#resource-name").val("");
+    // $("#account-name").val("");
     // last_search = undefined;
     if ($("#resource-foldable .foldee").is(":visible")) {
         last_search = undefined;
@@ -75,10 +78,23 @@ function load_resources() {
     });
 }
 
+function load_popular_accounts() {
+    $.ajax({
+        url: 'commonaccounts?count=' + MAX_POPULAR_ACCOUNTS, success: (data) => {
+            popular_accounts = data;
+            console.log("Popular accounts loaded:", popular_accounts);
+        }
+    });
+}
+
 function makeNewAccount(name) {
     return {
         "id": null, "pass_part": null, "human_readable": name, "revision": "0", "last_hash": null, "last_used_on": null,
     }
+}
+
+function makeNewPopularAccounts() {
+    return popular_accounts.map(x => makeNewAccount(x.name));
 }
 
 function makeNewResource(name) {
@@ -86,7 +102,7 @@ function makeNewResource(name) {
         "name": name,
         "id": null,
         "last_account_id": null,
-        "accounts": [makeNewAccount(null),],
+        "accounts": [makeNewAccount(null),], //.concat(makeNewPopularAccounts()),
         "url": "https://" + name,
         "comment": "",
         "length": 12,
@@ -144,6 +160,15 @@ function searchAccounts(unlimited = false) {
                     $("#matching-accounts-extender").text('▲');
                 }
             }
+        }
+    }
+    if (new_text == '') {
+        for (const popular_account of popular_accounts) {
+            if (matching.some(x => x.human_readable === popular_account.name)) {
+                continue;
+            }
+            const element = $.parseHTML("<div title='Создать новый аккаунт' class='resource-found new-resource'><span class='new-resource-label'><img height='15' width='15' src='/static/img/create.png'/></span>" + popular_account.name + "</div>");
+            matchingDiv.append(element);
         }
     }
 }
@@ -252,9 +277,15 @@ function onAccountSelected(account, isDefault, isNew) {
 
 function selectDefaultAccount() {
     if (selected_resource.accounts.length === 1) {
-        $("#matching-accounts .resource-found").click();
+        $("#matching-accounts .resource-found:not(.new-resource)").click();
     } else {
-        const account = selected_resource.accounts.find(x => x.human_readable == null);
+        let account = null;
+        if (selected_resource.last_account_id != null) {
+            account = selected_resource.accounts.find(x => x.id == selected_resource.last_account_id);
+        }
+        if (account == null) {
+            account = selected_resource.accounts.find(x => x.human_readable == null);
+        }
         if (account != null) {
             onAccountSelected(account.human_readable, account.human_readable == null, false);
         }
@@ -279,6 +310,7 @@ function onResourceSelected(resource, isNew) {
     selected_resource = theresource;
     last_account_search = undefined;
     selected_account = undefined;
+
     $("#when-resource-selected").slideUp("fast", complete = () => {
         reloadResource();
         searchAccounts();
@@ -340,7 +372,7 @@ async function saveUrl() {
     if (unsaved_resource.id == null) {
         return;
     }
-    await withSaveLoader(async() => {
+    await withSaveLoader(async () => {
         return $.ajax("newurl", {
             method: "post", data: JSON.stringify({
                 resource_id: unsaved_resource.id, url: unsaved_resource.url
@@ -414,6 +446,7 @@ $(function () {
         }
     });
     load_resources();
+    load_popular_accounts();
 });
 
 

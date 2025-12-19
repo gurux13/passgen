@@ -6,35 +6,50 @@ import dataclasses
 from datetime import datetime
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for, make_response
+    Blueprint,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+    make_response,
 )
 
 from auth import login_required
 from db_models.user import User
 from db_models.variant import Resource, ResourceAccount
 from globals import db, app
-from models.ui_variant import ResourceModel, ResourceAccountModel, account_comp_key, resource_comp_key
+from models.ui_variant import (
+    ResourceModel,
+    ResourceAccountModel,
+    account_comp_key,
+    resource_comp_key,
+)
 from models.userinfo import UserInfoModel
 from utils.db_helper import set_from_model
 from wrappers import db_view
 
-bp = Blueprint('passgen', __name__)
+bp = Blueprint("passgen", __name__)
 
 
-@bp.route('/', )
+@bp.route(
+    "/",
+)
 @db_view
 @login_required
 def index():
     # return '<br>'.join([x.resource for x in db.session.query(Variant)])
 
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@bp.route('/resources')
+@bp.route("/resources")
 @db_view
 @login_required
 def resources():
-    return render_template('resources.html')
+    return render_template("resources.html")
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
@@ -46,21 +61,27 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 def get_all_data():
     user = db.session.query(User).filter_by(id=g.user.id)[0]
-    userinfo = UserInfoModel(
-        g.user.id,
-        user.lastresource_id,
-        user.lasthash
-    )
+    userinfo = UserInfoModel(g.user.id, user.lastresource_id, user.lasthash)
     all_resources = db.session.query(Resource).filter_by(login_id=g.user.id)
     dt_to_ts = lambda dt: None if dt is None else datetime.timestamp(dt)
     all_resources_model = map(
-        lambda db:
-        ResourceModel(
+        lambda db: ResourceModel(
             db.id,
             db.last_account_id,
             sorted(
-                [ResourceAccountModel(x.id, x.pass_part, x.human_readable, x.revision, x.lasthash, dt_to_ts(x.last_used_on)) for x
-                 in db.accounts], key=account_comp_key),
+                [
+                    ResourceAccountModel(
+                        x.id,
+                        x.pass_part,
+                        x.human_readable,
+                        x.revision,
+                        x.lasthash,
+                        dt_to_ts(x.last_used_on),
+                    )
+                    for x in db.accounts
+                ],
+                key=account_comp_key,
+            ),
             db.name,
             db.url,
             db.comment,
@@ -69,26 +90,29 @@ def get_all_data():
             db.digits,
             db.symbols,
             db.underscore,
-        ), all_resources)
+        ),
+        all_resources,
+    )
     all_resources_model = sorted(all_resources_model, key=resource_comp_key)
-    return {'resources': list(all_resources_model), 'userinfo': userinfo}
+    return {"resources": list(all_resources_model), "userinfo": userinfo}
 
 
-@bp.route('/newurl', methods=['POST'])
+@bp.route("/newurl", methods=["POST"])
 @db_view
 @login_required
 def new_url():
     data = json.loads(request.data)
     print(data)
-    resources = list(db.session.query(Resource).filter_by(id = data['resource_id']))
+    resources = list(db.session.query(Resource).filter_by(id=data["resource_id"]))
 
     if len(resources) != 1 or resources[0].login_id != g.user.id:
         return app.response_class("Access denied", status=403)
-    resources[0].url = data['url']
+    resources[0].url = data["url"]
     db.session.commit()
     return app.response_class('"OK"', status=200)
 
-@bp.route('/batchresources')
+
+@bp.route("/batchresources")
 @db_view
 @login_required
 def batchresources():
@@ -96,20 +120,20 @@ def batchresources():
     response = app.response_class(
         response=json.dumps(data, cls=EnhancedJSONEncoder),
         status=200,
-        mimetype='application/json'
+        mimetype="application/json",
     )
     return response
 
 
-@bp.route('/generated', methods=['POST'])
+@bp.route("/generated", methods=["POST"])
 @db_view
 @login_required
 def generated():
     data = json.loads(request.data)
     print(request.data)
-    if 'resource' not in data or 'account' not in data:
+    if "resource" not in data or "account" not in data:
         return batchresources()
-    client_resource = ResourceModel(accounts=None, **data['resource'])
+    client_resource = ResourceModel(accounts=None, **data["resource"])
     if client_resource.id is None:
         resource = Resource()
         resource.login_id = g.user.id
@@ -120,7 +144,7 @@ def generated():
             return batchresources()
         resource: Resource = resources[0]
 
-    client_account = ResourceAccountModel(**data['account'])
+    client_account = ResourceAccountModel(**data["account"])
     if client_account.id is None:
         account = ResourceAccount()
         account.resource = resource
@@ -128,7 +152,9 @@ def generated():
     else:
         if resource.id is None:
             return batchresources()
-        accounts = list(db.session.query(ResourceAccount).filter_by(id=client_account.id))
+        accounts = list(
+            db.session.query(ResourceAccount).filter_by(id=client_account.id)
+        )
         if len(accounts) == 0 or accounts[0].resource_id != resource.id:
             return batchresources()
         account: ResourceAccount = accounts[0]
@@ -140,75 +166,98 @@ def generated():
     print(resource)
     user = db.session.query(User).filter_by(id=g.user.id)[0]
     user.lastresource = resource
+    resource.last_account = account
     db.session.commit()
 
     db.session.refresh(resource)
     db.session.refresh(account)
 
     data = get_all_data()
-    data['this_resource_id'] = resource.id
-    data['this_account_id'] = account.id
+    data["this_resource_id"] = resource.id
+    data["this_account_id"] = account.id
     # time.sleep(1)
     return app.response_class(
         response=json.dumps(data, cls=EnhancedJSONEncoder),
         status=200,
-        mimetype='application/json'
+        mimetype="application/json",
     )
 
 
-@bp.route('/newsha', methods=['POST'])
+@bp.route("/newsha", methods=["POST"])
 @db_view
 @login_required
 def newsha():
     data = json.loads(request.data)
-    account: ResourceAccount = \
-        db.session.query(ResourceAccount).filter_by(id=data['account_id'], resource_id=data['resource_id'])[0]
+    account: ResourceAccount = db.session.query(ResourceAccount).filter_by(
+        id=data["account_id"], resource_id=data["resource_id"]
+    )[0]
     if account.resource.login_id != g.user.id:
-        return redirect(url_for('auth.login'))
+        return redirect(url_for("auth.login"))
     print("Found account:", account)
 
-    if data['global']:
+    if data["global"]:
         print("Saving global sha")
         user = db.session.query(User).filter_by(id=g.user.id)[0]
-        user.lasthash = data['sha']
+        user.lasthash = data["sha"]
         account.lasthash = None
         db.session.commit()
     else:
-        account.lasthash = data['sha']
+        account.lasthash = data["sha"]
         db.session.commit()
     print(request.data)
     # time.sleep(1)
     return batchresources()
 
-@bp.route('/updateresource', methods=['POST'])
+
+@bp.route("/updateresource", methods=["POST"])
 @db_view
 @login_required
 def updateresource():
     data = json.loads(request.data)
     print(data)
-    resource: Resource = db.session.query(Resource).filter_by(id=data['id'])[0]
+    resource: Resource = db.session.query(Resource).filter_by(id=data["id"])[0]
     if resource.login_id != g.user.id:
         return app.response_class("Access denied", status=403)
-    resource.name = data['name']
-    resource.comment = data['comment']
-    resource.length = data['length']
-    resource.letters = data['letters']
-    resource.digits = data['digits']
-    resource.symbols = data['symbols']
-    resource.underscore = data['underscore']
-    resource.url = data['url']
+    resource.name = data["name"]
+    resource.comment = data["comment"]
+    resource.length = data["length"]
+    resource.letters = data["letters"]
+    resource.digits = data["digits"]
+    resource.symbols = data["symbols"]
+    resource.underscore = data["underscore"]
+    resource.url = data["url"]
     db.session.commit()
     return batchresources()
 
-@bp.route('/deleteresource', methods=['POST'])
+
+@bp.route("/deleteresource", methods=["POST"])
 @db_view
 @login_required
 def deleteresource():
     id = json.loads(request.data)
-    
+
     resource: Resource = db.session.query(Resource).filter_by(id=id)[0]
     if resource.login_id != g.user.id:
         return app.response_class("Access denied", status=403)
     db.session.delete(resource)
     db.session.commit()
     return batchresources()
+
+
+@bp.route("/commonaccounts", methods=["GET"])
+@db_view
+@login_required
+def common_accounts():
+    count = int(request.args.get("count", "10"))
+    common_accounts = db.session.query(ResourceAccount.human_readable, db.func.count(Resource.id).label('count')).filter(
+        ResourceAccount.human_readable != None).filter(ResourceAccount.human_readable != ""
+    ).join(Resource, Resource.id == ResourceAccount.resource_id).filter(Resource.login_id == g.user.id).group_by(
+        ResourceAccount.human_readable
+    ).order_by(
+        db.func.count(Resource.id).desc()
+    ).limit(count).all()
+    return app.response_class(
+        response=json.dumps([{"name": x.human_readable, "count": x.count} for x in common_accounts]),
+        status=200,
+        mimetype="application/json",
+    )
