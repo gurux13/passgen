@@ -9,6 +9,10 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import os
 
+# os.environ['MYSQL_USER'] = 'passgen'
+# os.environ['MYSQL_PASSWORD'] = '123456q'
+# os.environ['FLASK_KEY'] = 'blah'
+
 local_mode = len(sys.argv) == 2 and sys.argv[1] == 'local'
 
 if not local_mode:
