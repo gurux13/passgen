@@ -1,1 +1,2 @@
-php/byethost/
+__pycache__/
+*.pyc
