@@ -61,7 +61,7 @@ export const PINNED = Object.freeze({
     "static/img/pass-loader.gif": "46619bf76ba42fe947d6c27a9ec70a449deb793b35edd9fde709c273518c9316",
     "static/js/angular/resources.js": "589fcb6b9207e56476039ce340a1fde7d37e58437cc1a15e5ad7f0712b88e6ef",
     "static/js/base.js": "a0dee30528be09e521a727e7e44d999f38c2d54fb2bae365cb7c48e13596df02",
-    "static/js/crypto.js": "dc52b686126a09518ca1fc221bbeba88a1b16b0d983511bdd0a2d7091b6b3386",
+    "static/js/crypto.js": "cab2727bdff40d485a642785f8f6f9483e2b6974277dc98d18422addf4aa45d6",
     "static/js/foldable.js": "38a2108405d91097ceeebb310bc8c7ba321e6bfd30d5901f4fe06345773ac4c7",
     "static/js/gen.js": "f441b04fc00d47d6937c6b655ef54269bf04924ee154e84c36faea9edc038cf1",
     "static/js/sha.js": "d515902009efc8c51f965925747fdf904f774d674979247e8fddcb35d51685f1"

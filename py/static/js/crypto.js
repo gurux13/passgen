@@ -148,10 +148,5 @@ function generate(resource, account, length, revision, master, letters, digits, 
     if (symbols || symbol == '_' && underscore) {
         pass_final = pass_final.replaceAt(symbol_pos, symbol);
     }
-    x = "";
-    for (i = 0; i < info_data.length; ++i) {
-        x += info_data.charCodeAt(i) + " ";
-    }
-    console.warn(x);
     return pass_final;
 }
