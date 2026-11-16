@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>genpw.cc</title>
+  <link rel="stylesheet" href="../ui/common.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="logo">genpw.cc</span>
+    <button id="status" class="status" hidden></button>
+    <a href="https://genpw.cc/" target="_blank" class="muted small open">↗</a>
+  </header>
+
+  <table id="problems" class="small" hidden></table>
+
+  <div id="signed-in" hidden>
+    <span id="username"></span>
+    <div class="row">
+      <button id="fill-page" class="primary">Fill</button>
+      <button id="logout">Sign out</button>
+    </div>
+  </div>
+
+  <form id="login-form" hidden autocomplete="off">
+    <label for="login-username">Username</label>
+    <input type="text" id="login-username" required autocomplete="username">
+    <label for="login-password">Password</label>
+    <input type="password" id="login-password" required autocomplete="current-password">
+    <label class="check"><input type="checkbox" id="login-remember" checked> Stay signed in</label>
+    <div id="login-error" class="bad small" hidden></div>
+    <button type="submit" class="primary" id="login-submit">Sign in</button>
+  </form>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

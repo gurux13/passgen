@@ -1,0 +1,48 @@
+body {
+  padding: 12px 14px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+#site {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.status.ok {
+  color: var(--ok);
+}
+
+.status.bad {
+  color: var(--bad);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+#fill {
+  margin-top: 12px;
+}
+
+#message {
+  margin-top: 8px;
+}
+
+#untrusted {
+  margin-top: 4px;
+}

@@ -1,0 +1,70 @@
+{
+  "manifest_version": 3,
+  "name": "genpw.cc",
+  "version": "1.1.0",
+  "description": "Verifies genpw.cc against hardcoded asset hashes and fills genpw.cc-generated passwords on matching sites.",
+  "minimum_chrome_version": "110",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://genpw.cc/*",
+    "https://passgen.ddns.net/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "genpw.cc",
+    "default_popup": "popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://genpw.cc/*",
+        "https://passgen.ddns.net/*"
+      ],
+      "js": [
+        "content/verify.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "exclude_matches": [
+        "https://genpw.cc/*",
+        "https://passgen.ddns.net/*"
+      ],
+      "js": [
+        "content/autofill.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "sandbox": {
+    "pages": [
+      "sandbox/generator.html"
+    ]
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-eval'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "prompt/prompt.html",
+        "sandbox/generator.html"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
+  ]
+}
