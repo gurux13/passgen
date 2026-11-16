@@ -7,6 +7,57 @@
 
   const SKIP_INITIATORS = new Set(["xmlhttprequest", "fetch", "beacon"]);
 
+  // Runs from document_start: everything ever inserted is recorded here, so code
+  // the page removes from the DOM after it ran is still reported.
+  const everScripts = new Map(); // src url -> kind
+  const everInline = new Set();
+  const everHandlers = new Set();
+
+  function record(el) {
+    if (el.nodeType !== 1) return;
+    if (el.tagName === "SCRIPT") {
+      if (el.src) everScripts.set(el.src, "script");
+      else if (el.textContent) everInline.add(el.textContent);
+    } else if (el.tagName === "LINK" && el.href && /stylesheet/i.test(el.rel)) {
+      everScripts.set(el.href, "style");
+    }
+    for (const attr of el.attributes ?? []) recordAttr(attr.name, attr.value);
+  }
+
+  function recordAttr(name, value) {
+    name = name.toLowerCase();
+    if (value == null) return;
+    if (name.startsWith("on")) everHandlers.add(value);
+    else if (["href", "src", "action", "formaction"].includes(name) && /^\s*javascript:/i.test(value)) everHandlers.add(value);
+  }
+
+  new MutationObserver((records) => {
+    let relevant = false;
+    for (const r of records) {
+      if (r.target === banner) continue;
+      if (r.type === "attributes") {
+        const name = r.attributeName.toLowerCase();
+        if (name.startsWith("on") || ["href", "src", "action", "formaction", "rel"].includes(name)) {
+          recordAttr(name, r.target.getAttribute(r.attributeName));
+          relevant = true;
+        }
+      } else if (r.type === "characterData" || (r.type === "childList" && r.target.tagName === "SCRIPT")) {
+        const s = r.target.nodeType === 1 ? r.target : r.target.parentElement;
+        if (s?.tagName === "SCRIPT") {
+          if (!s.src && s.textContent) everInline.add(s.textContent);
+          relevant = true;
+        }
+      }
+      for (const n of r.addedNodes) {
+        if (n.nodeType !== 1 || n === banner) continue;
+        record(n);
+        n.querySelectorAll?.("*").forEach(record);
+        if (n.matches("script,link") || n.querySelector("script,link,[onclick],[onload],[onerror]")) relevant = true;
+      }
+    }
+    if (relevant && started) schedule(500);
+  }).observe(document, { childList: true, subtree: true, attributes: true, characterData: true });
+
   async function sha256Hex(buf) {
     const digest = await crypto.subtle.digest("SHA-256", buf);
     return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
@@ -40,19 +91,10 @@
       if (SKIP_INITIATORS.has(e.initiatorType)) continue;
       add(e.name, e.initiatorType === "script" ? "script" : "other");
     }
+    for (const [url, kind] of everScripts) add(url, kind);
 
-    const inlineScripts = [...document.querySelectorAll("script:not([src])")].map((s) => s.textContent);
-    const inlineHandlers = [];
-    for (const el of document.querySelectorAll("*")) {
-      for (const attr of el.attributes) {
-        const name = attr.name.toLowerCase();
-        if (name.startsWith("on")) inlineHandlers.push(attr.value);
-        else if (["href", "src", "action", "formaction"].includes(name) && /^\s*javascript:/i.test(attr.value)) {
-          inlineHandlers.push(attr.value);
-        }
-      }
-    }
-    return { kinds, inlineScripts, inlineHandlers };
+    document.querySelectorAll("*").forEach(record);
+    return { kinds, inlineScripts: [...everInline], inlineHandlers: [...everHandlers] };
   }
 
   async function buildReport() {
@@ -70,7 +112,9 @@
         }
       })
     );
-    return { resources, inlineScripts, inlineHandlers };
+    // A service worker could answer the hash fetches above with different bytes.
+    const serviceWorker = !!navigator.serviceWorker?.controller;
+    return { resources, inlineScripts, inlineHandlers, serviceWorker };
   }
 
   let banner = null;
@@ -182,25 +226,93 @@
     }
   }
 
-  let timer = null;
-  const schedule = (ms) => {
-    clearTimeout(timer);
-    timer = setTimeout(run, ms);
-  };
-  new MutationObserver((records) => {
-    for (const r of records) {
-      if (r.type === "attributes") return schedule(500);
-      for (const n of r.addedNodes) {
-        if (n.nodeType === 1 && (n.matches("script,link") || n.querySelector?.("script,link,[onclick]"))) return schedule(500);
+  // ---- what the user typed (trusted keyboard/paste input only) and the master password.
+  // Listeners go on window in the capture phase from document_start, so they run
+  // before any page listener. For each edit we keep the value just before it
+  // (beforeinput) and check that the result is that value plus what the user
+  // inserted; the background then only accepts it if the starting value was
+  // empty, server data or something already accepted (not set by a script).
+  const before = new WeakMap();
+  let master = null;
+  const isField = (el) =>
+    el instanceof HTMLTextAreaElement ||
+    (el instanceof HTMLInputElement && !["checkbox", "radio", "button", "submit", "hidden", "file"].includes(el.type));
+
+  window.addEventListener(
+    "beforeinput",
+    (e) => {
+      if (e.isTrusted && isField(e.target)) before.set(e.target, e.target.value);
+    },
+    true
+  );
+  window.addEventListener(
+    "input",
+    (e) => {
+      const el = e.target;
+      if (!e.isTrusted || !isField(el)) return;
+      if (el.id === "master-input") {
+        master = el.value;
+        return;
       }
+      if (el.type === "password") return; // account passwords are never sent as-is
+      const base = before.get(el);
+      before.delete(el);
+      if (base === undefined || !isSingleEdit(base, el.value, e)) return;
+      chrome.runtime.sendMessage({ type: "genpw:typed", base, value: el.value }).catch(() => {});
+    },
+    true
+  );
+
+  // value must be base with one contiguous segment replaced by the inserted text.
+  function isSingleEdit(base, value, e) {
+    let p = 0;
+    while (p < base.length && p < value.length && base[p] === value[p]) p++;
+    let s = 0;
+    while (s < base.length - p && s < value.length - p && base[base.length - 1 - s] === value[value.length - 1 - s]) s++;
+    const inserted = value.slice(p, value.length - s);
+    if (e.inputType?.startsWith("delete")) return inserted === "";
+    return e.data == null || inserted === e.data || inserted === e.data.replace(/\r?\n/g, "");
+  }
+
+  // ---- API writes handed over by the page-world shim (content/xhr-shim.js)
+  window.addEventListener("message", async (event) => {
+    if (event.source !== window || event.data?.genpwProxy !== "req") return;
+    const { id, url, body, contentType } = event.data;
+    let res;
+    try {
+      res = await chrome.runtime.sendMessage({
+        type: "genpw:proxy",
+        url: String(url),
+        body: String(body),
+        contentType: contentType == null ? null : String(contentType),
+        master,
+      });
+    } catch {
+      res = null;
     }
-  }).observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["onclick", "onload", "onerror", "onmouseover", "onfocus", "onblur", "onchange", "oninput", "onsubmit", "onkeydown", "onkeyup", "onkeypress", "href", "src"],
+    res ??= { status: 0, statusText: "", headers: "", body: "" };
+    window.postMessage({ genpwProxy: "res", id, status: res.status, statusText: res.statusText, headers: res.headers, body: res.body }, location.origin);
   });
 
-  run();
+  let timer = null;
+  function schedule(ms) {
+    clearTimeout(timer);
+    timer = setTimeout(run, ms);
+  }
+
+  // The background re-evaluates when it sees new requests; keep the banner in sync.
+  chrome.runtime.onMessage.addListener((msg, sender) => {
+    if (sender.id === chrome.runtime.id && msg?.type === "genpw:verdict" && msg.verdict?.status) showBanner(msg.verdict);
+  });
+
+  let started = false;
+  function start() {
+    started = true;
+    run();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+  else start();
   window.addEventListener("load", () => schedule(1500));
+  // Restored from the back/forward cache: report again (the background starts a new check).
+  window.addEventListener("pageshow", (e) => e.persisted && schedule(0));
 })();

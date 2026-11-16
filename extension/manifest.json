@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
   "name": "genpw.cc",
-  "version": "1.1.0",
+  "version": "1.5.0",
   "description": "Verifies genpw.cc against hardcoded asset hashes and fills genpw.cc-generated passwords on matching sites.",
-  "minimum_chrome_version": "110",
+  "minimum_chrome_version": "111",
   "permissions": [
-    "storage"
+    "storage",
+    "webRequest",
+    "declarativeNetRequest"
   ],
   "host_permissions": [
-    "https://genpw.cc/*",
-    "https://passgen.ddns.net/*"
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "src/background.js",
@@ -26,9 +27,20 @@
         "https://passgen.ddns.net/*"
       ],
       "js": [
+        "content/xhr-shim.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://genpw.cc/*",
+        "https://passgen.ddns.net/*"
+      ],
+      "js": [
         "content/verify.js"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     },
     {
       "matches": [
@@ -53,7 +65,7 @@
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'",
-    "sandbox": "sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-eval'"
+    "sandbox": "sandbox allow-scripts; default-src 'none'; script-src 'self'"
   },
   "web_accessible_resources": [
     {

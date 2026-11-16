@@ -32,6 +32,36 @@ export function parseResourceUrl(raw) {
   return { host, isIp, protocol: u.protocol };
 }
 
+// Second-level labels that usually belong to a public suffix ("co" in co.uk,
+// "com" in com.au). Not a full public-suffix list: just enough to keep the
+// domain choice from offering "co.uk".
+const SUFFIX_SECOND_LEVEL = new Set(["co", "com", "net", "org", "gov", "edu", "ac", "or", "ne", "go", "gob", "mil", "nic", "ltd", "plc", "sch", "nhs"]);
+
+// The domains a page could be saved under, most specific first:
+// "login.accounts.example.co.uk" -> [login.accounts.example.co.uk, accounts.example.co.uk, example.co.uk]
+export function hostHierarchy(hostname) {
+  const host = normalizeHost(hostname);
+  if (!host || IPV4.test(host) || host.startsWith("[") || !host.includes(".")) return host ? [host] : [];
+  const labels = host.split(".");
+  let minLabels = 2;
+  if (labels.length >= 3 && labels.at(-1).length === 2 && SUFFIX_SECOND_LEVEL.has(labels.at(-2))) minLabels = 3;
+  const out = [];
+  for (let i = 0; labels.length - i >= minLabels; i++) out.push(labels.slice(i).join("."));
+  return out.length ? out : [host];
+}
+
+// The domain to suggest for a new resource: the registrable part of the host.
+export function suggestedDomain(hostname) {
+  return hostHierarchy(hostname).at(-1) ?? "";
+}
+
+// Does this page belong to the resource? Resources are matched by their name (the
+// name is part of the password); a name that isn't a domain never matches.
+export function matchesResourceName(pageOrigin, name) {
+  if (typeof name !== "string" || !/^[^\s/]+\.[^\s/]+/.test(name.trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, ""))) return false;
+  return originMatches(pageOrigin, name);
+}
+
 // pageOrigin: the origin (or URL) of the frame asking, as reported by Chrome.
 export function originMatches(pageOrigin, resourceUrl) {
   const spec = parseResourceUrl(resourceUrl);

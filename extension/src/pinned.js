@@ -9,6 +9,32 @@ export const PINNED = Object.freeze({
     "static/js/sha.js",
     "static/js/crypto.js"
   ],
+  "endpoints": {
+    "get": [
+      "batchresources",
+      "commonaccounts"
+    ],
+    "post": [
+      "generated",
+      "newsha",
+      "newurl",
+      "updateresource",
+      "deleteresource"
+    ]
+  },
+  "pages": {
+    "get": [
+      "",
+      "resources",
+      "auth/login",
+      "auth/register",
+      "auth/logout"
+    ],
+    "post": [
+      "auth/login",
+      "auth/register"
+    ]
+  },
   "files": {
     "static/css/snackbar.css": "dba08b296e04377ebf76f3557f600b0994109213e7ab43bd3135f806e361eafe",
     "static/css/styles.css": "c80f9dd237e406a7549b78274e6d56e5825f74551974e16d228968f1f0202197",

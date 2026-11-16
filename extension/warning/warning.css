@@ -1,0 +1,53 @@
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+}
+
+main {
+  width: min(640px, 100%);
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+.bad {
+  font-weight: 700;
+}
+
+#issues {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#issues td {
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+#issues td:first-child {
+  word-break: break-all;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+#issues td:last-child {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+#close {
+  background: var(--bad);
+  border-color: var(--bad);
+}

@@ -25,11 +25,14 @@
   async function scan(force) {
     if (promptHost) return;
     if (asked && !force) return;
-    if (!passwordFields().length) return;
+    const fields = passwordFields();
+    if (!fields.length) return;
     asked = true;
+    // Whatever is already in the username field, as a guess for the account.
+    const usernameGuess = findUsernameField(fields[0])?.value ?? "";
     let res;
     try {
-      res = await chrome.runtime.sendMessage({ type: "genpw:match" });
+      res = await chrome.runtime.sendMessage({ type: "genpw:match", force: !!force, usernameGuess });
     } catch {
       return; // extension reloaded
     }

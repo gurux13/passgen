@@ -10,20 +10,37 @@
   <header>
     <span class="logo">genpw.cc</span>
     <span id="site" class="muted"></span>
-    <span id="status" class="status" title="Checking genpw.cc code">…</span>
     <button id="close" class="icon" title="Close (Esc)">✕</button>
   </header>
 
-  <div id="untrusted" hidden>
-    <button id="use-anyway">Use anyway</button>
-  </div>
-
   <form id="form" autocomplete="off" hidden>
-    <label for="account">Account</label>
-    <select id="account"></select>
+    <label for="resource">Resource <span id="resource-new" class="tag" hidden>new</span></label>
+    <select id="resource"></select>
+
+    <label for="account">Account <span id="account-new" class="tag" hidden>new</span></label>
+    <input type="text" id="account" list="accounts" placeholder="Default" spellcheck="false">
+    <datalist id="accounts"></datalist>
+
+    <button type="button" id="params-toggle" class="params-toggle">
+      <span id="params-summary" class="mono"></span><span class="muted">▾</span>
+    </button>
+    <div id="params" hidden>
+      <div class="params-row">
+        <label>Length <input type="number" id="length" min="1" max="256"></label>
+        <label>Revision <input type="text" id="revision" spellcheck="false"></label>
+      </div>
+      <div class="params-row checks">
+        <label><input type="checkbox" id="letters"> A</label>
+        <label><input type="checkbox" id="digits"> 0</label>
+        <label><input type="checkbox" id="symbols"> @</label>
+        <label><input type="checkbox" id="underscore"> _</label>
+      </div>
+    </div>
 
     <label for="master">Master password</label>
     <input type="password" id="master" autocomplete="off" spellcheck="false">
+
+    <label class="check"><input type="checkbox" id="remember" checked> Remember login URL</label>
 
     <div id="message" class="small" hidden></div>
 

@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+# Build output of extension/tools/sync_ethalon.py (single source: py/static/js)
+extension/generator/

@@ -6,47 +6,45 @@
   <link rel="stylesheet" href="../ui/common.css">
   <link rel="stylesheet" href="../prompt/prompt.css">
   <script>
-    // Harness for prompt/prompt.js outside the extension: stubs the extension API
-    // and serves genpw.cc's generator files from the local py/static.
-    // Serve the repo root over HTTP and open /extension/tests/prompt.html#0123456789abcdef0123456789abcdef
-    //   ?tampered  serves a modified crypto.js (hash mismatch)
-    //   ?offline   makes every download fail
+    // Harness for prompt/prompt.js outside the extension: stubs the extension API.
+    // Run extension/tools/sync_ethalon.py first (it packages generator/sha.js + crypto.js),
+    // serve the repo root over HTTP and open /extension/tests/prompt.html#0123456789abcdef0123456789abcdef
+    //   ?existing  the site already has a resource (example.com) with two accounts
     //   ?broken    makes the sandbox frame fail to load
     window.__fills = [];
     const params = new URLSearchParams(location.search);
-    const realFetch = window.fetch.bind(window);
-    window.fetch = async (url, opts) => {
-      const m = String(url).match(/^https:\/\/(genpw\.cc|passgen\.ddns\.net)\/(.*)$/);
-      if (!m) return realFetch(url, opts);
-      if (params.has("offline")) throw new TypeError("Failed to fetch");
-      const r = await realFetch(new URL("../../py/" + m[2], location.href).href, opts);
-      if (params.has("tampered") && m[2].endsWith("crypto.js")) {
-        return new Response((await r.text()) + "\n// tampered\n");
-      }
-      return r;
+    const getURL = (path) => {
+      if (params.has("broken") && path.startsWith("sandbox/")) return new URL("../does-not-exist.html", location.href).href;
+      return new URL("../" + path, location.href).href;
+    };
+    const existing = {
+      id: 1, name: "example.com", url: "https://example.com", comment: "", last_account_id: 2,
+      length: 16, letters: true, digits: true, symbols: false, underscore: true,
+      accounts: [
+        { id: 1, pass_part: null, human_readable: null, revision: "0", last_hash: null },
+        { id: 2, pass_part: null, human_readable: "me@example.com", revision: "2", last_hash: null },
+      ],
     };
     window.chrome = {
       runtime: {
-        getURL: (path) => new URL(params.has("broken") ? "../does-not-exist.html" : "../" + path, location.href).href,
+        getURL,
         sendMessage: async (msg) => {
           if (msg.type === "genpw:getPrompt") {
             return {
               ok: true,
-              origin: "https://login.example.com",
+              origin: "https://login.accounts.example.com",
+              loginUrl: "https://login.accounts.example.com/signin",
+              hosts: ["login.accounts.example.com", "accounts.example.com", "example.com"],
+              suggested: "example.com",
+              resources: params.has("existing") ? [existing] : [],
+              popular: ["gurux13", "me@example.com"],
+              usernameGuess: "typed-user",
               lastHash: null,
-              resources: [{
-                id: 1, name: "example.com", url: "https://example.com", last_account_id: 2,
-                length: 12, letters: true, digits: true, symbols: true, underscore: true,
-                accounts: [
-                  { id: 1, pass_part: null, human_readable: null, revision: "0", last_hash: null },
-                  { id: 2, pass_part: null, human_readable: "me@example.com", revision: "0", last_hash: null },
-                ],
-              }],
             };
           }
           if (msg.type === "genpw:fill") {
             window.__fills.push(msg);
-            return { ok: true };
+            return { ok: true, saved: true };
           }
           return { ok: true };
         },
@@ -54,24 +52,41 @@
     };
   </script>
 </head>
-<body style="width:340px;height:290px;border:1px solid #444">
+<body style="width:340px;border:1px solid #444">
   <header>
     <span class="logo">genpw.cc</span>
     <span id="site" class="muted"></span>
-    <span id="status" class="status" title="Checking genpw.cc code">…</span>
     <button id="close" class="icon" title="Close (Esc)">✕</button>
   </header>
 
-  <div id="untrusted" hidden>
-    <button id="use-anyway">Use anyway</button>
-  </div>
-
   <form id="form" autocomplete="off" hidden>
-    <label for="account">Account</label>
-    <select id="account"></select>
+    <label for="resource">Resource <span id="resource-new" class="tag" hidden>new</span></label>
+    <select id="resource"></select>
+
+    <label for="account">Account <span id="account-new" class="tag" hidden>new</span></label>
+    <input type="text" id="account" list="accounts" placeholder="Default" spellcheck="false">
+    <datalist id="accounts"></datalist>
+
+    <button type="button" id="params-toggle" class="params-toggle">
+      <span id="params-summary" class="mono"></span><span class="muted">▾</span>
+    </button>
+    <div id="params" hidden>
+      <div class="params-row">
+        <label>Length <input type="number" id="length" min="1" max="256"></label>
+        <label>Revision <input type="text" id="revision" spellcheck="false"></label>
+      </div>
+      <div class="params-row checks">
+        <label><input type="checkbox" id="letters"> A</label>
+        <label><input type="checkbox" id="digits"> 0</label>
+        <label><input type="checkbox" id="symbols"> @</label>
+        <label><input type="checkbox" id="underscore"> _</label>
+      </div>
+    </div>
 
     <label for="master">Master password</label>
     <input type="password" id="master" autocomplete="off" spellcheck="false">
+
+    <label class="check"><input type="checkbox" id="remember" checked> Remember login URL</label>
 
     <div id="message" class="small" hidden></div>
 

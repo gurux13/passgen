@@ -1,33 +1,20 @@
 // Sandboxed page (opaque origin, no extension APIs, no network: see
-// content_security_policy.sandbox in manifest.json). It evaluates the verified
-// genpw.cc generator scripts (sha.js + crypto.js) exactly as downloaded, then
-// calls their generate() the same way py/static/js/gen.js does.
-
-let loadedKey = null;
-
-// The prompt verifies the sources against the hardcoded hashes before every
-// call. They are always the same pinned bytes, so evaluating once is enough.
-function load(sources) {
-  const key = sources.join("\u0000");
-  if (key === loadedKey) return;
-  if (loadedKey !== null) throw new Error("Generator already initialised with different code; reload.");
-  // Indirect eval = global scope, like a classic <script> on genpw.cc.
-  for (const src of sources) (0, eval)(src);
-  if (typeof generate !== "function" || typeof sha1hex !== "function") {
-    throw new Error("genpw.cc generator did not define generate()/sha1hex().");
-  }
-  loadedKey = key;
-}
+// content_security_policy.sandbox in manifest.json). sha.js and crypto.js are
+// genpw.cc's own generator scripts, packaged unmodified with the extension and
+// loaded by generator.html; the prompt checks them against the pinned hashes
+// before using this page. generate() is called the same way gen.js does.
 
 window.addEventListener("message", (event) => {
   // Only our parent (the extension prompt page) talks to us.
   if (event.source !== window.parent) return;
-  const { id, ping, sources, args } = event.data ?? {};
+  const { id, ping, args } = event.data ?? {};
   const reply = (payload) => window.parent.postMessage({ id, ...payload }, "*");
-  // Handshake: lets the prompt confirm this page actually loaded and runs.
-  if (ping) return reply({ ok: true, pong: true });
   try {
-    load(sources);
+    if (typeof generate !== "function" || typeof sha1hex !== "function") {
+      throw new Error("Generator scripts are missing: run extension/tools/sync_ethalon.py.");
+    }
+    // Handshake: lets the prompt confirm this page actually loaded and runs.
+    if (ping) return reply({ ok: true, pong: true });
     const { resourceName, account, length, revision, master, letters, digits, symbols, underscore } = args;
     // Same call as generate_click() in gen.js.
     const password = generate(resourceName, account, length, revision, master, letters, digits, symbols, underscore);

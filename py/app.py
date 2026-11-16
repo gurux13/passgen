@@ -45,6 +45,13 @@ def create_app():
     app.register_blueprint(auth.bp)
     app.register_blueprint(passgen.bp)
 
+    @app.after_request
+    def no_transform(response):
+        # Proxies (e.g. Cloudflare's JavaScript detections) must not modify pages:
+        # the genpw.cc browser extension checks them against pinned hashes.
+        response.cache_control.no_transform = True
+        return response
+
     # install libmysqlclient-dev!
     global theapp
     theapp = app

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Hardcode the hashes of the genpw.cc assets into the extension.
+"""Hardcode the hashes of the genpw.cc assets into the extension, and package the
+generator scripts (sha.js, crypto.js) from py/static/js into extension/generator/.
 
 Hashes every file in py/static (SHA-256 of the exact bytes) and extracts the
 inline <script> blocks, inline event handlers and javascript: links from
@@ -23,12 +24,25 @@ ROOT = Path(__file__).resolve().parents[2]
 STATIC = ROOT / "py" / "static"
 TEMPLATES = ROOT / "py" / "templates"
 OUT = ROOT / "extension" / "src" / "pinned.js"
+# The generator scripts are packaged with the extension. The repository keeps a single
+# copy in py/static/js; this folder is a build output (gitignored).
+GENERATOR_OUT = ROOT / "extension" / "generator"
 
 # Sites that serve these exact assets. The generator code is downloaded from the
 # first one that answers, in this order.
 ORIGINS = ["https://genpw.cc", "https://passgen.ddns.net"]
 # Files the extension evaluates (unmodified) to generate passwords, in load order.
 GENERATOR = ["static/js/sha.js", "static/js/crypto.js"]
+# Same-origin XHR endpoints the site's own scripts call (gen.js, angular/resources.js).
+# Every other non-navigation request from a genpw.cc page is blocked by the extension.
+ENDPOINTS = {
+    # Read-only; pages may call these directly (commonaccounts only with ?count=<digits>).
+    "get": ["batchresources", "commonaccounts"],
+    # Writes; only possible through the extension, which validates every value sent.
+    "post": ["generated", "newsha", "newurl", "updateresource", "deleteresource"],
+}
+# Navigations a genpw.cc page may start on its own origin (GET), and form posts.
+PAGES = {"get": ["", "resources", "auth/login", "auth/register", "auth/logout"], "post": ["auth/login", "auth/register"]}
 SKIP_NAMES = {".DS_Store", "Thumbs.db", "desktop.ini"}
 
 
@@ -80,6 +94,8 @@ def main() -> int:
     pinned = {
         "origins": ORIGINS,
         "generator": GENERATOR,
+        "endpoints": ENDPOINTS,
+        "pages": PAGES,
         "files": files,
         "inlineScripts": sorted(inline_scripts),
         "inlineHandlers": sorted(handlers),
@@ -92,6 +108,12 @@ def main() -> int:
         encoding="utf-8",
         newline="\n",
     )
+
+    GENERATOR_OUT.mkdir(parents=True, exist_ok=True)
+    for path in GENERATOR:
+        data = (STATIC / path.removeprefix("static/")).read_bytes()
+        (GENERATOR_OUT / Path(path).name).write_bytes(data)
+    print(f"Copied {', '.join(Path(p).name for p in GENERATOR)} -> {GENERATOR_OUT}")
 
     print(f"Pinned {len(files)} files, {len(inline_scripts)} inline scripts, {len(handlers)} inline handlers -> {OUT}")
     for w in warnings:

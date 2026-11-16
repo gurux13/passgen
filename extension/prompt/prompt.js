@@ -1,26 +1,24 @@
-import { fetchGenerator } from "../src/generator-source.js";
-
-const DEFAULT_ACCOUNT_NAME = "Default";
 const TIMEOUT_MS = 10000;
+const DEFAULTS = { length: 12, revision: "0", letters: true, digits: true, symbols: true, underscore: true };
 const token = location.hash.slice(1);
 
 const $ = (id) => document.getElementById(id);
 const form = $("form");
-const accountSelect = $("account");
+const resourceSelect = $("resource");
+const accountInput = $("account");
 const masterInput = $("master");
 const fillButton = $("fill");
+const param = {
+  length: $("length"),
+  revision: $("revision"),
+  letters: $("letters"),
+  digits: $("digits"),
+  symbols: $("symbols"),
+  underscore: $("underscore"),
+};
 
-let options = []; // [{resource, account}]
-let lastHash = null;
-let sources = null; // generator code downloaded when the prompt opened
+let info = null;
 let confirmMismatchFor = null; // master hash the user agreed to fill despite mismatch
-
-function setStatus(ok) {
-  const el = $("status");
-  el.textContent = ok ? "✓" : "✗";
-  el.className = "status " + (ok ? "ok" : "bad");
-  el.title = ok ? "genpw.cc code verified" : "genpw.cc code does not match the pinned hashes";
-}
 
 function showMessage(text, cls = "") {
   const el = $("message");
@@ -31,15 +29,8 @@ function showMessage(text, cls = "") {
 
 function showError(text) {
   form.hidden = true;
-  $("untrusted").hidden = true;
   $("error").textContent = text;
   $("error").hidden = false;
-}
-
-function showForm() {
-  $("untrusted").hidden = true;
-  form.hidden = false;
-  masterInput.focus();
 }
 
 function close() {
@@ -57,7 +48,7 @@ function withTimeout(promise, ms, what) {
   ]).finally(() => clearTimeout(timer));
 }
 
-// ---- generator: genpw.cc code running in the sandbox frame
+// ---- generator: genpw.cc's sha.js + crypto.js (packaged) running in the sandbox frame
 
 let generatorFrame = null;
 let generatorReady = null;
@@ -98,56 +89,118 @@ function ensureGenerator() {
   return generatorReady;
 }
 
-// ---- UI
+// ---- state
 
-function render(info) {
+const currentResource = () => info.resources.find((r) => r.name === resourceSelect.value) ?? null;
+const accountName = () => accountInput.value.trim() || null; // empty = the default account
+const currentAccount = () => currentResource()?.accounts.find((a) => (a.human_readable ?? null) === accountName()) ?? null;
+
+function readParams() {
+  return {
+    length: parseInt(param.length.value, 10),
+    revision: param.revision.value.trim() || "0",
+    letters: param.letters.checked,
+    digits: param.digits.checked,
+    symbols: param.symbols.checked,
+    underscore: param.underscore.checked,
+  };
+}
+
+// Same notation as the site: |length| #revision A0@_
+function updateSummary() {
+  const p = readParams();
+  const chars = (p.letters ? "A" : "") + (p.digits ? "0" : "") + (p.symbols ? "@" : "") + (p.underscore ? "_" : "") || "????";
+  $("params-summary").textContent = `|${Number.isFinite(p.length) ? p.length : "?"}| #${p.revision} ${chars}`;
+}
+
+function updateTags() {
+  $("resource-new").hidden = !!currentResource();
+  $("account-new").hidden = !!currentAccount();
+}
+
+function onAccountChanged() {
+  const acct = currentAccount();
+  if (acct) param.revision.value = acct.revision ?? "0";
+  updateTags();
+  updateSummary();
+  resetConfirmation();
+}
+
+function onResourceChanged() {
+  const r = currentResource();
+  const src = r ?? DEFAULTS;
+  param.length.value = src.length;
+  for (const k of ["letters", "digits", "symbols", "underscore"]) param[k].checked = !!src[k];
+  param.revision.value = DEFAULTS.revision;
+
+  // Account suggestions: this resource's accounts, then the most used ones.
+  const names = [...new Set([...(r?.accounts ?? []).map((a) => a.human_readable).filter(Boolean), ...info.popular])];
+  $("accounts").replaceChildren(
+    ...names.map((n) => {
+      const o = document.createElement("option");
+      o.value = n;
+      return o;
+    })
+  );
+  // Best guess: the resource's last used account, else what's in the page's username field.
+  if (r) {
+    const last = r.accounts.find((a) => a.id === r.last_account_id) ?? r.accounts[0];
+    accountInput.value = last?.human_readable ?? "";
+  } else {
+    accountInput.value = info.usernameGuess ?? "";
+  }
+  onAccountChanged();
+}
+
+function render() {
   $("site").textContent = new URL(info.origin).host;
   $("site").title = info.origin;
-  lastHash = info.lastHash;
-  const multiple = info.resources.length > 1;
-  options = [];
-  let selected = 0;
-  for (const resource of info.resources) {
-    for (const account of resource.accounts) {
-      if (resource === info.resources[0] && account.id === resource.last_account_id) selected = options.length;
-      options.push({ resource, account });
-      const name = account.human_readable ?? DEFAULT_ACCOUNT_NAME;
-      const opt = document.createElement("option");
-      opt.value = String(options.length - 1);
-      opt.textContent = multiple ? `${resource.name} — ${name}` : name;
-      accountSelect.append(opt);
-    }
-  }
-  accountSelect.value = String(selected);
-  accountSelect.disabled = options.length === 1;
-  return options.length > 0;
+  // Existing resources for this site first, then the page's domain hierarchy.
+  const names = [...new Set([...info.resources.map((r) => r.name), ...info.hosts])];
+  resourceSelect.replaceChildren(
+    ...names.map((n) => {
+      const o = document.createElement("option");
+      o.value = n;
+      o.textContent = n;
+      return o;
+    })
+  );
+  resourceSelect.value = info.resources[0]?.name ?? info.suggested ?? names[0];
+  onResourceChanged();
 }
+
+// ---- fill
 
 async function onFill(event) {
   event.preventDefault();
   const master = masterInput.value;
   if (!master) return masterInput.focus();
-  const { resource, account } = options[Number(accountSelect.value)];
+  const p = readParams();
+  if (!Number.isInteger(p.length) || p.length < 1 || p.length > 256) return showMessage("Length must be 1–256.", "bad");
+  if (!p.letters && !p.digits && !p.symbols && !p.underscore) return showMessage("Pick at least one character set.", "bad");
 
+  const name = resourceSelect.value;
+  const acct = currentAccount();
+  const human = accountName();
   fillButton.disabled = true;
   try {
     await ensureGenerator();
     const { password, masterHash } = await callSandbox({
-      sources,
+      // Same arguments as generate_click() in gen.js.
       args: {
-        resourceName: resource.name,
-        account: account.pass_part ?? account.human_readable,
-        length: resource.length,
-        revision: account.revision,
+        resourceName: name,
+        account: acct ? (acct.pass_part ?? acct.human_readable) : human,
+        length: p.length,
+        revision: p.revision,
         master,
-        letters: resource.letters,
-        digits: resource.digits,
-        symbols: resource.symbols,
-        underscore: resource.underscore,
+        letters: p.letters,
+        digits: p.digits,
+        symbols: p.symbols,
+        underscore: p.underscore,
       },
     });
 
-    const expected = account.last_hash ?? lastHash ?? null;
+    const expected = acct?.last_hash ?? info.lastHash ?? null;
     if (expected && masterHash !== expected && confirmMismatchFor !== masterHash) {
       confirmMismatchFor = masterHash;
       showMessage(`Master hash ${masterHash}, expected ${expected}`, "warn");
@@ -156,7 +209,13 @@ async function onFill(event) {
     }
 
     const res = await withTimeout(
-      chrome.runtime.sendMessage({ type: "genpw:fill", token, username: account.human_readable ?? null, password }),
+      chrome.runtime.sendMessage({
+        type: "genpw:fill",
+        token,
+        username: human,
+        password,
+        choice: { name, account: human, ...p, rememberUrl: $("remember").checked },
+      }),
       TIMEOUT_MS,
       "The page"
     );
@@ -183,36 +242,31 @@ new ResizeObserver(() => {
 }).observe(document.documentElement);
 
 form.addEventListener("submit", onFill);
+resourceSelect.addEventListener("change", onResourceChanged);
+accountInput.addEventListener("input", onAccountChanged);
 masterInput.addEventListener("input", resetConfirmation);
-accountSelect.addEventListener("change", resetConfirmation);
+for (const el of Object.values(param)) {
+  el.addEventListener("input", () => {
+    updateSummary();
+    resetConfirmation();
+  });
+}
+$("params-toggle").addEventListener("click", () => ($("params").hidden = !$("params").hidden));
 $("close").addEventListener("click", close);
-$("use-anyway").addEventListener("click", showForm);
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") close();
 });
 
 (async () => {
-  const [info, generator] = await Promise.all([
+  const [res, generator] = await Promise.all([
     chrome.runtime.sendMessage({ type: "genpw:getPrompt", token }),
-    // Downloaded and checked against the hardcoded hashes every time the prompt opens.
-    withTimeout(fetchGenerator(), 20000, "genpw.cc").catch((e) => ({ error: e })),
+    ensureGenerator().catch((e) => ({ error: e })),
   ]);
-  if (!info?.ok) {
-    setStatus(false);
-    return showError(info?.error ?? "Request not found.");
-  }
-  if (!render(info)) {
-    setStatus(false);
-    return showError("No accounts for this site yet.");
-  }
-  if (generator.error) {
-    setStatus(false);
-    showError("genpw.cc unreachable");
-    $("error").title = String(generator.error.message ?? generator.error);
-    return;
-  }
-  sources = generator.sources;
-  setStatus(generator.verified);
-  if (generator.verified) showForm();
-  else $("untrusted").hidden = false; // master password stays hidden until explicitly accepted
+  if (!res?.ok) return showError(res?.error ?? "Request not found.");
+  if (generator?.error) return showError(String(generator.error.message ?? generator.error));
+  info = res;
+  if (!info.resources.length && !info.hosts.length) return showError("No domain to save this site under.");
+  render();
+  form.hidden = false;
+  masterInput.focus();
 })();

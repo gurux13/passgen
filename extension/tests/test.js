@@ -1,8 +1,9 @@
-import { originMatches, parseResourceUrl } from "../src/hosts.js";
+import { hostHierarchy, matchesResourceName, originMatches, parseResourceUrl, suggestedDomain } from "../src/hosts.js";
 import { checkPage, normalizeCode } from "../src/verify.js";
 import { sha256Hex } from "../src/hash.js";
 import { PINNED } from "../src/pinned.js";
-import { fetchGenerator, fetchVerifiedGenerator } from "../src/generator-source.js";
+import { buildDynamicRules, buildResourceUrlRules, resourceLinkUrls } from "../src/netguard.js";
+import { collectKnown, masterHashPrefix, validateAuthForm, validatePayload } from "../src/payload.js";
 
 const out = document.getElementById("out");
 let passed = 0;
@@ -57,6 +58,33 @@ const hostCases = [
 for (const [page, res, want] of hostCases) check(`originMatches(${page}, ${res})`, originMatches(page, res), want);
 check("parseResourceUrl strips www", parseResourceUrl("https://www.Example.com/x")?.host, "example.com");
 
+// matching by resource name (the name is part of the password)
+const nameCases = [
+  ["https://github.com", "github.com", true],
+  ["https://gist.github.com", "github.com", true],
+  ["https://evilgithub.com", "github.com", false],
+  ["https://github.com.evil.net", "github.com", false],
+  ["https://github.com", "GitHub.com", true],
+  ["https://example.com", "www.example.com", true],
+  ["https://technogym.com", "technogym", false], // not a domain: never matches
+  ["https://fs.example", "fs", false],
+  ["https://example.com", "", false],
+  ["https://example.com", null, false],
+  ["http://example.com", "example.com", false], // https only
+  ["https://login.xn--e1afmkfd.xn--p1ai", "пример.рф", true],
+  ["https://example.com", "example.com/login", true],
+];
+for (const [page, name, want] of nameCases) check(`matchesResourceName(${page}, ${name})`, matchesResourceName(page, name), want);
+
+check("hostHierarchy simple", hostHierarchy("login.accounts.example.com"), ["login.accounts.example.com", "accounts.example.com", "example.com"]);
+check("hostHierarchy co.uk", hostHierarchy("www.argos.co.uk"), ["www.argos.co.uk", "argos.co.uk"]);
+check("hostHierarchy two labels", hostHierarchy("github.com"), ["github.com"]);
+check("hostHierarchy trailing dot/case", hostHierarchy("Mail.Example.COM."), ["mail.example.com", "example.com"]);
+check("hostHierarchy IP", hostHierarchy("192.168.1.1"), ["192.168.1.1"]);
+check("hostHierarchy single label", hostHierarchy("router"), ["router"]);
+check("suggestedDomain", suggestedDomain("auth.gosuslugi.ru"), "gosuslugi.ru");
+check("suggestedDomain com.au", suggestedDomain("my.bank.com.au"), "bank.com.au");
+
 // ---------------------------------------------------------------- page verdicts
 const pinned = {
   origins: ["https://genpw.cc", "https://passgen.ddns.net"],
@@ -86,6 +114,101 @@ check("verdict unreadable warns", verdict({ resources: [res(G + "/static/js/gen.
 check("verdict __proto__ path", verdict({ resources: [res(G + "/__proto__", "script", "aa")] }), "fail");
 check("normalizeCode", normalizeCode("  a\r\n\t b  "), "a b");
 
+// network log merged in by the background
+const pinnedNet = { ...pinned, endpoints: { get: ["batchresources"], post: [] } };
+const net = (url, type, extra = {}) => ({ url, type, blocked: false, ...extra });
+const vNet = (network, report = {}) => checkPage({ ...base, resources: [], ...report }, G, pinnedNet, network).status;
+check("network: blocked request fails", vNet([net("https://evil.example/x", "xmlhttprequest", { blocked: true })]), "fail");
+check("network: own API xhr ok", vNet([net(G + "/batchresources", "xmlhttprequest")]), "ok");
+check("network: xhr of pinned file ok", vNet([net(G + "/static/js/gen.js", "xmlhttprequest")]), "ok");
+check("network: pinned script hashed by background ok", vNet([net(G + "/static/js/gen.js", "script", { sha256: "aa" })]), "ok");
+check("network: pinned script with wrong bytes fails", vNet([net(G + "/static/js/gen.js", "script", { sha256: "XX" })]), "fail");
+check("network: script removed from DOM still checked", vNet([net(G + "/static/js/evil.js", "script")]), "fail");
+check("network: report hash wins over unhashed network entry",
+  vNet([net(G + "/static/js/gen.js", "script")], { resources: [res(G + "/static/js/gen.js", "script", "aa")] }), "ok");
+check("network: blocked listed once",
+  checkPage({ ...base }, G, pinnedNet, [net("https://e.x/1", "image", { blocked: true }), net("https://e.x/1", "image", { blocked: true })]).items.length, 1);
+check("service worker fails", checkPage({ ...base, serviceWorker: true }, G, pinnedNet).status, "fail");
+
+// ---------------------------------------------------------------- API payload validation
+const serverData = {
+  resources: [
+    {
+      id: 7, last_account_id: 9, name: "github.com", url: "https://github.com", comment: "work", length: 16,
+      letters: true, digits: true, symbols: false, underscore: true,
+      accounts: [{ id: 9, pass_part: null, human_readable: "gurux13", revision: "0", last_hash: "3896", last_used_on: 1794786000.5 }],
+    },
+  ],
+  userinfo: { id: 1, last_resource_id: 7, last_hash: "3896" },
+};
+const known = collectKnown(serverData, [{ name: "me@example.com", count: 3 }]);
+const MASTER = "correct horse battery";
+const shaRef = await referenceFrame();
+const masterHash = await masterHashPrefix(MASTER);
+const ctx = (typed = [], extra = {}) => ({ known, typed, master: MASTER, masterHash, ...extra });
+const existing = () => ({ ...serverData.resources[0], accounts: undefined });
+const acct = () => ({ ...serverData.resources[0].accounts[0] });
+const clean = (o) => JSON.parse(JSON.stringify(o));
+
+check("payload: master hash matches sha.js", masterHash, shaRef.sha1hex(MASTER).substr(0, 4).toUpperCase());
+check("payload: master hash matches sha.js (non-ASCII)", await masterHashPrefix("пароль ✓"), shaRef.sha1hex("пароль ✓").substr(0, 4).toUpperCase());
+check("payload: generated with existing data ok", validatePayload("generated", clean({ resource: existing(), account: acct() }), ctx()), null);
+check("payload: new resource from typed name ok",
+  validatePayload("generated", clean({ resource: { id: null, last_account_id: null, name: "new.site", url: "https://new.site", comment: "", length: 12, letters: true, digits: true, symbols: true, underscore: true }, account: { id: null, pass_part: null, human_readable: null, revision: "0", last_hash: null, last_used_on: null } }), ctx(["new.site"])), null);
+check("payload: typed length ok", validatePayload("generated", clean({ resource: { ...existing(), length: 20 }, account: acct() }), ctx(["20"])), null);
+check("payload: popular account name ok", validatePayload("generated", clean({ resource: existing(), account: { ...acct(), id: null, human_readable: "me@example.com" } }), ctx()), null);
+check("payload: master in comment rejected", /master password/.test(validatePayload("generated", clean({ resource: { ...existing(), comment: MASTER }, account: acct() }), ctx()) ?? ""), true);
+check("payload: master fragment rejected", /master password/.test(validatePayload("generated", clean({ resource: { ...existing(), comment: "x horse batt y" }, account: acct() }), ctx()) ?? ""), true);
+check("payload: untyped string rejected", /not a value/.test(validatePayload("generated", clean({ resource: { ...existing(), comment: "c2VjcmV0" }, account: acct() }), ctx()) ?? ""), true);
+check("payload: untyped number rejected", /not a value/.test(validatePayload("generated", clean({ resource: { ...existing(), length: 1337 }, account: acct() }), ctx()) ?? ""), true);
+check("payload: extra field rejected", /unexpected field/.test(validatePayload("generated", clean({ resource: existing(), account: acct(), x: "y" }), ctx()) ?? ""), true);
+check("payload: newsha with real hash ok", validatePayload("newsha", { resource_id: 7, account_id: 9, sha: masterHash, global: true }, ctx()), null);
+check("payload: newsha with other hash rejected", /doesn't match/.test(validatePayload("newsha", { resource_id: 7, account_id: 9, sha: "ABCD", global: true }, ctx()) ?? ""), true);
+check("payload: newsha without master rejected", validatePayload("newsha", { resource_id: 7, account_id: 9, sha: masterHash, global: true }, ctx([], { master: null, masterHash: null })) !== null, true);
+check("payload: newurl typed ok", validatePayload("newurl", { resource_id: 7, url: "https://gh.example" }, ctx(["gh.example"])), null);
+check("payload: newurl untyped rejected", validatePayload("newurl", { resource_id: 7, url: "https://evil.example/?m=1" }, ctx()) !== null, true);
+check("payload: deleteresource known id ok", validatePayload("deleteresource", 7, ctx()), null);
+check("payload: deleteresource unknown id rejected", validatePayload("deleteresource", 31337, ctx()) !== null, true);
+check("payload: updateresource with link_url ok", validatePayload("updateresource", clean({ ...serverData.resources[0], link_url: "https://github.com", comment: "new comment" }), ctx(["new comment"])), null);
+check("auth form: login ok", validateAuthForm({ username: ["gurux18"], passhash: ["a".repeat(64)] }, ["gurux18"]), null);
+check("auth form: untyped username rejected", validateAuthForm({ username: [MASTER], passhash: ["a".repeat(64)] }, ["gurux18"]) !== null, true);
+check("auth form: extra field rejected", validateAuthForm({ username: ["gurux18"], passhash: ["a".repeat(64)], m: ["x"] }, ["gurux18"]) !== null, true);
+check("auth form: non-hash passhash rejected", validateAuthForm({ username: ["gurux18"], passhash: ["secret"] }, ["gurux18"]) !== null, true);
+
+// allowlist rules (declarativeNetRequest)
+const rules = buildDynamicRules(PINNED);
+const blockRule = rules.find((r) => r.action.type === "block");
+check("dnr: block rule covers both sites", blockRule.condition.initiatorDomains, ["genpw.cc", "passgen.ddns.net"]);
+check("dnr: allow rules = pinned files + API + 2 page rules, per site", rules.filter((r) => r.action.type === "allow").length, PINNED.origins.length * (Object.keys(PINNED.files).length + 3));
+check("dnr: unique ids", new Set(rules.map((r) => r.id)).size, rules.length);
+const allowRes = rules.filter((r) => r.action.type === "allow").map((r) => ({ re: new RegExp(r.condition.regexFilter), types: r.condition.resourceTypes }));
+const allowRes2 = rules.filter((r) => r.action.type === "allow").map((r) => ({ re: new RegExp(r.condition.regexFilter), types: r.condition.resourceTypes, excluded: r.condition.excludedResourceTypes ?? [], methods: r.condition.requestMethods }));
+const allowed = (url, type = "script", method = "get") => allowRes2.some((a) => a.re.test(url) && (!a.types || a.types.includes(type)) && !a.excluded.includes(type) && (!a.methods || a.methods.includes(method)));
+check("dnr: pinned script allowed", allowed("https://genpw.cc/static/js/gen.js"), true);
+check("dnr: pinned font with ?v allowed", allowed("https://genpw.cc/static/fonts/fontawesome-webfont.woff2?v=4.7.0", "font"), true);
+check("dnr: mirror allowed", allowed("https://passgen.ddns.net/static/js/sha.js"), true);
+check("dnr: API xhr allowed", allowed("https://genpw.cc/batchresources", "xmlhttprequest"), true);
+check("dnr: API as script not allowed", allowed("https://genpw.cc/batchresources", "script"), false);
+check("dnr: unpinned path blocked", allowed("https://genpw.cc/static/js/evil.js"), false);
+check("dnr: suffix trick blocked", allowed("https://genpw.cc/static/js/gen.js.evil"), false);
+check("dnr: path suffix blocked", allowed("https://genpw.cc/static/js/gen.js/x"), false);
+check("dnr: other host blocked", allowed("https://genpw.cc.evil.com/static/js/gen.js"), false);
+check("dnr: commonaccounts with count allowed", allowed("https://genpw.cc/commonaccounts?count=5", "xmlhttprequest"), true);
+check("dnr: commonaccounts with extra params blocked", allowed("https://genpw.cc/commonaccounts?count=5&m=secret", "xmlhttprequest"), false);
+check("dnr: POST /generated from page blocked", allowed("https://genpw.cc/generated", "xmlhttprequest", "post"), false);
+check("dnr: GET batchresources with query blocked", allowed("https://genpw.cc/batchresources?m=1", "xmlhttprequest"), false);
+check("dnr: navigate to site page allowed", allowed("https://genpw.cc/resources", "main_frame"), true);
+check("dnr: navigate to index allowed", allowed("https://genpw.cc/", "main_frame"), true);
+check("dnr: navigate with query blocked", allowed("https://genpw.cc/?m=secret", "main_frame"), false);
+check("dnr: login form post allowed", allowed("https://genpw.cc/auth/login", "main_frame", "post"), true);
+check("dnr: post to index blocked", allowed("https://genpw.cc/", "main_frame", "post"), false);
+check("dnr: navigate elsewhere blocked", allowed("https://evil.example/?m=secret", "main_frame"), false);
+const linkUrls = resourceLinkUrls([{ url: "github.com" }, { url: "https://example.com/login" }, { url: "" }, { url: "javascript:alert(1)" }]);
+check("dnr: resource link urls normalized", linkUrls, ["https://github.com/", "https://example.com/login"]);
+const linkRules = buildResourceUrlRules(linkUrls);
+check("dnr: resource link rules are exact", linkRules.map((r) => r.condition.urlFilter), ["|https://github.com/|", "|https://example.com/login|"]);
+check("dnr: cloudflare blocked", allowed("https://genpw.cc/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=1"), false);
+
 // ---------------------------------------------------------------- hardcoded hashes vs repo files
 check("pinned origins", PINNED.origins, ["https://genpw.cc", "https://passgen.ddns.net"]);
 check("pinned is frozen", Object.isFrozen(PINNED), true);
@@ -94,36 +217,15 @@ for (const path of Object.keys(PINNED.files)) {
   check(`pinned hash ${path}`, await sha256Hex(buf), PINNED.files[path]);
 }
 
-// ---------------------------------------------------------------- download + verify generator
-const LOCAL = new URL("../../py", location.href).href;
-const tampered = "https://tampered.invalid";
-const down = "https://down.invalid";
-const fakeFetch = (url, opts) => {
-  check(`fetch uses no-store (${url.split("/").pop()})`, opts.cache, "no-store");
-  if (url.startsWith(tampered)) return Promise.resolve(new Response("function generate(){return 'pwned'}"));
-  if (url.startsWith(down)) return Promise.reject(new TypeError("Failed to fetch"));
-  return fetch(url, opts);
-};
-const sources = await fetchVerifiedGenerator({ origins: [down, tampered, LOCAL], fetchImpl: fakeFetch });
-check("generator falls back past down + tampered origins", sources.length, 2);
-let error = null;
-try {
-  await fetchVerifiedGenerator({ origins: [tampered, down], fetchImpl: fakeFetch });
-} catch (e) {
-  error = e.message;
+// ---------------------------------------------------------------- packaged generator
+const PACKAGED = new URL("../generator/", location.href).href;
+for (const path of PINNED.generator) {
+  const name = path.split("/").pop();
+  const [packaged, repo] = await Promise.all(
+    [PACKAGED + name, "../../py/" + path].map(async (u) => new Uint8Array(await (await fetch(u, { cache: "no-store" })).arrayBuffer()))
+  );
+  check(`packaged ${name} is byte-identical to py/${path}`, packaged.length === repo.length && packaged.every((b, i) => b === repo[i]), true);
 }
-check("generator rejects tampered code", /hash does not match/.test(error ?? ""), true);
-const lenient = await fetchGenerator({ origins: [tampered], fetchImpl: fakeFetch });
-check("fetchGenerator returns unverified code for explicit opt-in", [lenient.verified, lenient.sources.length, lenient.mismatched.length], [false, 2, 2]);
-const good = await fetchGenerator({ origins: [tampered, LOCAL], fetchImpl: fakeFetch });
-check("fetchGenerator prefers a verified copy", [good.verified, good.mismatched.length], [true, 0]);
-let offlineError = null;
-try {
-  await fetchGenerator({ origins: [down], fetchImpl: fakeFetch });
-} catch (e) {
-  offlineError = e.message;
-}
-check("fetchGenerator throws when nothing downloads", /Could not download/.test(offlineError ?? ""), true);
 
 // ---------------------------------------------------------------- generator parity
 // Reference: sha.js + crypto.js loaded with plain <script> tags, as on genpw.cc.
@@ -160,7 +262,7 @@ function viaSandbox(args) {
       resolve(e.data);
     };
     window.addEventListener("message", h);
-    sandbox.postMessage({ id: myId, sources, args }, "*");
+    sandbox.postMessage({ id: myId, args }, "*");
   });
 }
 
