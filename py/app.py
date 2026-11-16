@@ -33,7 +33,7 @@ def create_app():
     if not local_mode:
         app.config[
             'SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://' + MYSQL_USER + ':' + \
-                                         MYSQL_PASSWORD + '@localhost/passgen_py?charset=utf8mb4'
+                                         MYSQL_PASSWORD + '@localhost/passgen?charset=utf8mb4'
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
