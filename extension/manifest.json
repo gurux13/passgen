@@ -3,6 +3,12 @@
   "name": "genpw.cc",
   "version": "1.6.0",
   "description": "Verifies genpw.cc against hardcoded asset hashes and fills genpw.cc-generated passwords on matching sites.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "minimum_chrome_version": "111",
   "permissions": [
     "storage",
@@ -18,7 +24,11 @@
   },
   "action": {
     "default_title": "genpw.cc",
-    "default_popup": "popup/popup.html"
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
   },
   "content_scripts": [
     {

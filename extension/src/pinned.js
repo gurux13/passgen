@@ -64,6 +64,7 @@ export const PINNED = Object.freeze({
       "04faf1eabc95cb977dc3ad6f9cd684ce19e724937b326f78b76f1618af20c694"
     ],
     "static/favicon.ico": [
+      "21236b8be3a638884ea60cf221205381b508c08e6ae502404c93df88b4dd9db8",
       "bb5c7f0a692d15f3d2773783260b37d7460ea3d7e4f64c3592752d06a21f8ae9"
     ],
     "static/fonts/fontawesome-webfont.ttf": [
