@@ -20,6 +20,14 @@ h1 {
   font-weight: 700;
 }
 
+.update {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  color: var(--warn);
+}
+
 #issues {
   width: 100%;
   border-collapse: collapse;

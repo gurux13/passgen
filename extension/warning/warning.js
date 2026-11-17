@@ -16,6 +16,10 @@ $("proceed").addEventListener("click", () => chrome.runtime.sendMessage({ type: 
     return;
   }
   $("host").textContent = new URL(w.url).host;
+  if (w.updateText) {
+    $("update").textContent = w.updateText;
+    $("update").hidden = false;
+  }
   for (const item of w.items) {
     if (item.status === "ok") continue;
     const row = $("issues").insertRow();

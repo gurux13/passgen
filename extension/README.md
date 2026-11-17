@@ -85,11 +85,19 @@ All site assets are self-hosted under `py/static`, nothing from CDNs: AngularJS 
 
 1. Change files in `py/static` / `py/templates`.
 2. `python extension/tools/sync_ethalon.py` (regenerates `src/pinned.js` and `extension/generator/`).
-3. Bump `version` in `manifest.json` and release the extension (zip the `extension/` folder, including
-   `generator/`; `tests/` and `tools/` aren't needed).
+   Each file pins a **list** of accepted hashes: the new ones are added in front and the previous
+   release's stay accepted (up to 4 per file), so the sites and the extension can be updated in any order.
+3. Bump `version` in `manifest.json`, push, and release the extension (zip the `extension/` folder,
+   including `generator/`; `tests/` and `tools/` aren't needed).
 4. Deploy the same files to genpw.cc and passgen.ddns.net.
+5. Once every site serves the new files, `python extension/tools/sync_ethalon.py --drop-old` and release
+   again to stop accepting the old ones.
 
-Until the sites and the extension agree, changed files fail verification on the sites.
+**Updates:** when a genpw.cc page fails verification, a Chrome Web Store (or policy) install asks the
+store for an update (`chrome.runtime.requestUpdateCheck`). If one exists, the warning page, popup and banner
+say "Updating the extension to 1.7.0…", the update is applied right away, and the genpw.cc tabs are
+reloaded and checked again with the new pins. Unpacked installs never update on their own: pull, run
+the sync script and reload the extension.
 
 **Chrome Web Store:** the extension runs no remotely hosted code: every script it executes is in the
 package, and the sandbox has no `eval`.

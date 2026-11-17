@@ -154,6 +154,7 @@
       verdict.status === "fail"
         ? "✗ genpw.cc assets don't match"
         : "✗ genpw.cc assets couldn't all be verified";
+    if (verdict.updateText) title.textContent += " — " + verdict.updateText;
     const toggle = document.createElement("span");
     toggle.className = "toggle";
     const close = document.createElement("button");

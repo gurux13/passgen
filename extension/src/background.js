@@ -4,6 +4,41 @@ import { checkPage, STATUS_TEXT } from "./verify.js";
 import { PINNED } from "./pinned.js";
 import { GUARDED_HOSTS, installDynamicRules, isGuardedUrl, setGuardedTabs, setResourceUrls } from "./netguard.js";
 import { collectKnown, masterHashPrefix, validateAuthForm, validatePayload } from "./payload.js";
+import { checkForUpdate, describeUpdate } from "./updates.js";
+
+// ---------------------------------------------------------------- updates
+
+// An update we asked for (because a genpw.cc page failed) has been downloaded:
+// apply it now. Chrome closes extension pages on reload, so tabs showing the
+// warning page go back to their genpw.cc page first; after the update they're
+// reloaded so the new version checks them. Other updates are left to Chrome,
+// which installs them when the extension is idle.
+chrome.runtime.onUpdateAvailable.addListener(async () => {
+  const { updateRequested } = await chrome.storage.session.get("updateRequested");
+  if (!updateRequested) return;
+  const all = await chrome.storage.session.get(null);
+  const recheck = [];
+  for (const [key, value] of Object.entries(all)) {
+    if (key.startsWith("warning:")) {
+      const tabId = Number(key.slice(8));
+      const tab = await chrome.tabs.get(tabId).catch(() => null);
+      if (!tab?.url?.startsWith(WARNING_URL)) continue; // moved on since
+      await chrome.tabs.update(tabId, { url: value.url }).catch(() => {});
+      recheck.push(tabId);
+    } else if (key.startsWith("guard:")) {
+      recheck.push(Number(key.slice(6)));
+    }
+  }
+  await chrome.storage.local.set({ recheckTabs: [...new Set(recheck)] });
+  chrome.runtime.reload();
+});
+
+chrome.runtime.onInstalled.addListener(async (details) => {
+  if (details.reason !== "update") return;
+  const { recheckTabs = [] } = await chrome.storage.local.get("recheckTabs");
+  await chrome.storage.local.remove("recheckTabs");
+  for (const tabId of recheckTabs) chrome.tabs.reload(tabId).catch(() => {});
+});
 
 const ORIGIN = "https://genpw.cc";
 // Same salt as hash_password() in py/static/js/base.js.
@@ -171,6 +206,18 @@ async function hashMissing(g) {
 
 async function applyVerdict(tabId, g, verdict) {
   for (const item of verdict.items) item.reason = STATUS_TEXT[item.status] ?? item.status;
+  // Hashes don't match: maybe the extension is just older than the site. Ask the
+  // Web Store; if an update is coming, it's applied and the page re-checked.
+  if (verdict.status !== "ok") {
+    verdict.update = await Promise.race([
+      checkForUpdate().catch(() => null),
+      new Promise((resolve) => setTimeout(() => resolve(null), 4000)),
+    ]);
+    verdict.updateText = describeUpdate(verdict.update);
+    if (verdict.update?.status === "update_available") {
+      await chrome.storage.session.set({ updateRequested: true });
+    }
+  }
   g.verdict = verdict;
   await Promise.all([saveGuard(tabId), chrome.storage.session.set({ ["verdict:" + tabId]: verdict })]);
   await setBadge(tabId, verdict.status);
@@ -193,7 +240,7 @@ async function showWarning(tabId, g, verdict) {
   const key = "proceed:" + tabId;
   const { [key]: proceed } = await chrome.storage.session.get(key);
   if (proceed === g.url) return;
-  await chrome.storage.session.set({ ["warning:" + tabId]: { url: g.url, items: verdict.items } });
+  await chrome.storage.session.set({ ["warning:" + tabId]: { url: g.url, items: verdict.items, updateText: verdict.updateText ?? null } });
   await chrome.tabs.update(tabId, { url: WARNING_URL + "#" + tabId }).catch(() => {});
 }
 

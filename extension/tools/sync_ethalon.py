@@ -12,6 +12,12 @@ after changing anything under py/static or py/templates, bump the version in
 extension/manifest.json, release, and deploy the same files to the sites:
 
     python extension/tools/sync_ethalon.py
+
+Each file pins a list of accepted hashes: the previous release's stay accepted
+next to the new ones, because the sites and the extension can't be updated at
+the same moment. Once every site serves the new files:
+
+    python extension/tools/sync_ethalon.py --drop-old
 """
 import hashlib
 import html
@@ -44,11 +50,21 @@ ENDPOINTS = {
 # Navigations a genpw.cc page may start on its own origin (GET), and form posts.
 PAGES = {"get": ["", "resources", "auth/login", "auth/register", "auth/logout"], "post": ["auth/login", "auth/register"]}
 SKIP_NAMES = {".DS_Store", "Thumbs.db", "desktop.ini"}
+MAX_VERSIONS = 4  # accepted hashes per file
 
 
 def normalize(code: str) -> str:
     """Whitespace-insensitive form; must match normalizeCode() in src/verify.js."""
     return re.sub(r"\s+", " ", code).strip()
+
+
+def read_previous() -> dict:
+    """The currently pinned data, so its hashes stay accepted for one more release."""
+    if not OUT.exists():
+        return {}
+    text = OUT.read_text(encoding="utf-8")
+    start = text.index("Object.freeze(") + len("Object.freeze(")
+    return json.loads(text[start : text.rindex(");")])
 
 
 def strip_comments(text: str) -> str:
@@ -91,12 +107,26 @@ def main() -> int:
         for m in re.finditer(r"""\s(?:href|src|action|formaction)\s*=\s*(?:"(\s*javascript:[^"]*)"|'(\s*javascript:[^']*)')""", text, flags=re.I):
             handlers.add(normalize(html.unescape(m.group(1) or m.group(2))))
 
+    # Sites and extension can't be released at the same instant, so by default the
+    # previous release's hashes stay accepted next to the current ones (newest
+    # first, at most MAX_VERSIONS per file). --drop-old pins only the current files.
+    previous = {} if "--drop-old" in sys.argv else read_previous()
+    prev_files = previous.get("files", {})
+    merged = {}
+    for path in sorted(set(files) | set(prev_files)):
+        old = prev_files.get(path, [])
+        old = [old] if isinstance(old, str) else list(old)
+        merged[path] = list(dict.fromkeys(([files[path]] if path in files else []) + old))[:MAX_VERSIONS]
+    inline_scripts |= set(previous.get("inlineScripts", []))
+    handlers |= set(previous.get("inlineHandlers", []))
+
     pinned = {
         "origins": ORIGINS,
         "generator": GENERATOR,
         "endpoints": ENDPOINTS,
         "pages": PAGES,
-        "files": files,
+        # path -> accepted SHA-256 hashes, newest first
+        "files": merged,
         "inlineScripts": sorted(inline_scripts),
         "inlineHandlers": sorted(handlers),
     }
@@ -115,7 +145,8 @@ def main() -> int:
         (GENERATOR_OUT / Path(path).name).write_bytes(data)
     print(f"Copied {', '.join(Path(p).name for p in GENERATOR)} -> {GENERATOR_OUT}")
 
-    print(f"Pinned {len(files)} files, {len(inline_scripts)} inline scripts, {len(handlers)} inline handlers -> {OUT}")
+    multi = sum(1 for v in merged.values() if len(v) > 1)
+    print(f"Pinned {len(merged)} files ({multi} with older versions still accepted), {len(inline_scripts)} inline scripts, {len(handlers)} inline handlers -> {OUT}")
     for w in warnings:
         print("WARNING:", w)
     return 0

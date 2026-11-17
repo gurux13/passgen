@@ -101,23 +101,25 @@ export function checkPage(report, pageOrigin, pinned, network = []) {
       if (res.kind === "xhr" && (endpoints.has(path) || Object.hasOwn(pinned.files, path))) continue;
       if (!Object.hasOwn(pinned.files, path)) status = code || res.kind === "xhr" ? "unknown-code" : "unknown";
       else if (!res.sha256) status = "unreadable";
-      else status = res.sha256 === pinned.files[path] ? "ok" : "mismatch";
+      else status = acceptedHashes(pinned, path).includes(res.sha256) ? "ok" : "mismatch";
     }
     const existing = items.findIndex((i) => i.key === key);
     if (existing >= 0) items.splice(existing, 1);
-    items.push({ key, url: res.url, status });
+    // A mismatch keeps the page's hash so a newer release's pins can be checked against it.
+    const detail = ["mismatch", "unknown", "unknown-code"].includes(status) && u.origin === pageOrigin;
+    items.push(detail ? { key, url: res.url, status, path: decodePath(u), sha256: res.sha256 ?? null } : { key, url: res.url, status });
     seen.add(key);
   }
 
   const knownScripts = new Set(pinned.inlineScripts.map(normalizeCode));
   for (const s of new Set(report.inlineScripts ?? [])) {
     const n = normalizeCode(s);
-    if (n && !knownScripts.has(n)) items.push({ url: "inline: " + n.slice(0, 80), status: "inline-script" });
+    if (n && !knownScripts.has(n)) items.push({ url: "inline: " + n.slice(0, 80), status: "inline-script", code: n });
   }
   const knownHandlers = new Set(pinned.inlineHandlers.map(normalizeCode));
   for (const h of new Set(report.inlineHandlers ?? [])) {
     const n = normalizeCode(h);
-    if (n && !knownHandlers.has(n)) items.push({ url: "handler: " + n.slice(0, 80), status: "inline-handler" });
+    if (n && !knownHandlers.has(n)) items.push({ url: "handler: " + n.slice(0, 80), status: "inline-handler", code: n });
   }
   if (report.serviceWorker) items.push({ url: pageOrigin, status: "service-worker" });
 
@@ -129,6 +131,20 @@ export function statusOf(items) {
   if (items.some((i) => FAIL.has(i.status))) return "fail";
   if (items.some((i) => WARN.has(i.status))) return "warn";
   return "ok";
+}
+
+// Every hash accepted for a pinned file (several releases can be valid at once).
+export function acceptedHashes(pinned, path) {
+  const v = pinned.files?.[path];
+  return v == null ? [] : Array.isArray(v) ? v : [v];
+}
+
+function decodePath(u) {
+  try {
+    return decodeURIComponent(u.pathname.replace(/^\//, ""));
+  } catch {
+    return u.pathname.replace(/^\//, "");
+  }
 }
 
 function stripHash(url) {

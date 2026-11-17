@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "genpw.cc",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Verifies genpw.cc against hardcoded asset hashes and fills genpw.cc-generated passwords on matching sites.",
   "minimum_chrome_version": "111",
   "permissions": [

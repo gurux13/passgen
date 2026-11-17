@@ -18,6 +18,8 @@ function renderVerdict(verdict) {
   const table = $("problems");
   status.hidden = !verdict;
   table.hidden = true;
+  $("update").hidden = !verdict?.updateText;
+  $("update").textContent = verdict?.updateText ?? "";
   if (!verdict) return;
   const ok = verdict.status === "ok";
   status.textContent = ok ? "✓" : "✗";

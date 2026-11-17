@@ -3,6 +3,7 @@ import { checkPage, normalizeCode } from "../src/verify.js";
 import { sha256Hex } from "../src/hash.js";
 import { PINNED } from "../src/pinned.js";
 import { buildDynamicRules, buildResourceUrlRules, resourceLinkUrls } from "../src/netguard.js";
+import { describeUpdate } from "../src/updates.js";
 import { collectKnown, masterHashPrefix, validateAuthForm, validatePayload } from "../src/payload.js";
 
 const out = document.getElementById("out");
@@ -88,7 +89,7 @@ check("suggestedDomain com.au", suggestedDomain("my.bank.com.au"), "bank.com.au"
 // ---------------------------------------------------------------- page verdicts
 const pinned = {
   origins: ["https://genpw.cc", "https://passgen.ddns.net"],
-  files: { "static/js/gen.js": "aa", "static/css/w3.css": "bb", "static/img/x.png": "cc" },
+  files: { "static/js/gen.js": ["aa", "a0"], "static/css/w3.css": ["bb"], "static/img/x.png": ["cc"] },
   inlineScripts: ["var a = 1;\n  var b = 2;"],
   inlineHandlers: ["w3_open()"],
 };
@@ -102,6 +103,13 @@ check("verdict ok", verdict({ resources: [res(G + "/static/js/gen.js", "script",
 check("verdict ok on mirror", verdict({ resources: [res(M + "/static/js/gen.js", "script", "aa")] }, M), "ok");
 check("verdict mirror page loading genpw.cc script", verdict({ resources: [res(G + "/static/js/gen.js", "script", "aa")] }, M), "fail");
 check("verdict mismatch", verdict({ resources: [res(G + "/static/js/gen.js", "script", "XX")] }), "fail");
+check("verdict older release still accepted", verdict({ resources: [res(G + "/static/js/gen.js", "script", "a0")] }), "ok");
+check("mismatch item keeps path + hash",
+  checkPage({ ...base, resources: [res(G + "/static/js/gen.js", "script", "XX")] }, G, pinned).items.map((i) => [i.path, i.sha256]), [["static/js/gen.js", "XX"]]);
+// update hint (Web Store installs)
+check("describeUpdate update_available", describeUpdate({ status: "update_available", version: "1.7.0", current: "1.6.0" }), "Updating the extension to 1.7.0 (you have 1.6.0)…");
+check("describeUpdate quiet otherwise", ["no_update", "throttled", "unpacked", "error"].map((status) => describeUpdate({ status, current: "1.6.0" })), [null, null, null, null]);
+check("pins are lists", Object.values(PINNED.files).every((v) => Array.isArray(v) && v.length >= 1 && v.length <= 4), true);
 check("verdict unknown script", verdict({ resources: [res(G + "/static/js/evil.js", "script", "aa")] }), "fail");
 check("verdict unknown image warns", verdict({ resources: [res(G + "/static/img/y.png", "other", "aa")] }), "warn");
 check("verdict pinned image ok", verdict({ resources: [res(G + "/static/img/x.png", "other", "cc")] }), "ok");
@@ -214,7 +222,7 @@ check("pinned origins", PINNED.origins, ["https://genpw.cc", "https://passgen.dd
 check("pinned is frozen", Object.isFrozen(PINNED), true);
 for (const path of Object.keys(PINNED.files)) {
   const buf = await (await fetch("../../py/" + path, { cache: "no-store" })).arrayBuffer();
-  check(`pinned hash ${path}`, await sha256Hex(buf), PINNED.files[path]);
+  check(`pinned hash ${path} (current file is newest)`, PINNED.files[path][0], await sha256Hex(buf));
 }
 
 // ---------------------------------------------------------------- packaged generator
